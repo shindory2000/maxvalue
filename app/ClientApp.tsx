@@ -1693,7 +1693,11 @@ function AdminAccountDetailModal({ account, close, saved }: {
   const [role, setRole] = useState<AdminAccountRole>(currentRole);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [resetting, setResetting] = useState(false);
+  const [resetMessage, setResetMessage] = useState("");
   const referrals = safeArray(account.referrals as Record<string, unknown>[] | undefined);
+  const seekerProfileId = String(account.seeker_profile_id || "");
+  const isCurrentUser = Boolean(account.is_current_user);
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
@@ -1736,6 +1740,26 @@ function AdminAccountDetailModal({ account, close, saved }: {
           <div><h3>{String(referral.name || "紹介ユーザー")}</h3><p>登録済み</p></div>
         </article>) : <p className="offer-note">紹介ユーザーはまだいません。</p>}</div>
       </>}
+      {(seekerProfileId || isCurrentUser) && <div className="admin-danger-zone test-reset-zone">
+        <b>新規登録フローをテスト</b>
+        <p>{seekerProfileId ? "求職者プロフィール・ガチャ結果・チケット・オファー履歴をリセットし、同じLINEで登録画面を最初から確認できます。管理者権限は残ります。" : "求職者プロフィールは未登録です。登録画面を最初から確認できます。"}</p>
+        {resetMessage && <p className="form-success">{resetMessage}</p>}
+        {seekerProfileId ? <Button type="button" kind="secondary" className="danger" disabled={resetting} onClick={async () => {
+          if (!window.confirm("このLINEアカウントの求職者登録をテスト用にリセットします。実行しますか？")) return;
+          setResetting(true);
+          setError("");
+          setResetMessage("");
+          try {
+            await deleteAdminSeeker(seekerProfileId);
+            setResetMessage("登録状態をリセットしました。");
+            if (isCurrentUser) window.location.href = "/?screen=setup";
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "登録状態のリセットに失敗しました");
+          } finally {
+            setResetting(false);
+          }
+        }}>{resetting ? "リセット中..." : "登録をリセットしてテスト開始"}</Button> : isCurrentUser && <Button type="button" onClick={() => { window.location.href = "/?screen=setup"; }}>登録画面を開く</Button>}
+      </div>}
       <div className="sheet-actions two">
         <Button type="button" kind="secondary" onClick={close}>閉じる</Button>
         <Button type="submit" disabled={saving}>{saving ? "保存中..." : "権限を保存"}</Button>
