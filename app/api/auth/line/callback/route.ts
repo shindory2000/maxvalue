@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exchangeLineCode, fetchLineBotProfile, fetchLineProfile, verifyLineOAuthState } from "@/lib/line";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { ADMIN_SESSION_COOKIE, ADMIN_SESSION_MAX_AGE, createAdminSessionToken } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -317,6 +318,20 @@ export async function GET(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 180,
       path: "/",
     });
+    if (resolvedRole === "admin") {
+      const adminSession = createAdminSessionToken(profile.userId);
+      if (adminSession) {
+        response.cookies.set(ADMIN_SESSION_COOKIE, adminSession, {
+          httpOnly: true,
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+          maxAge: ADMIN_SESSION_MAX_AGE,
+          path: "/",
+        });
+      }
+    } else {
+      response.cookies.delete(ADMIN_SESSION_COOKIE);
+    }
     if (linkedClub) {
       response.cookies.set("maxvalue_club_id", linkedClub.id, {
         sameSite: "lax",
