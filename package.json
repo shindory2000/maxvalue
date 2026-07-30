@@ -1,0 +1,29 @@
+{
+  "name": "maxvalue-rebuild",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "import:bubble": "node --import tsx scripts/import-bubble-data.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.107.0",
+    "framer-motion": "^12.40.0",
+    "lenis": "^1.3.23",
+    "lucide-react": "^0.468.0",
+    "next": "15.5.22",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.3",
+    "@types/react-dom": "^19.0.2",
+    "tsx": "^4.22.4",
+    "typescript": "^5.7.2"
+  }
+}

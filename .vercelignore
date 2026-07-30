@@ -1,0 +1,7 @@
+node_modules
+.next
+outputs
+README.md
+/supabase
+.DS_Store
+*.log
