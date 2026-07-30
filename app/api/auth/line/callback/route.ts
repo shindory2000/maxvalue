@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exchangeLineCode, fetchLineBotProfile, fetchLineProfile } from "@/lib/line";
+import { exchangeLineCode, fetchLineBotProfile, fetchLineProfile, verifyLineOAuthState } from "@/lib/line";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -174,21 +174,34 @@ async function linkClubStaff(
 export async function GET(request: NextRequest) {
   const expectedState = request.cookies.get("line_oauth_state")?.value;
   const receivedState = request.nextUrl.searchParams.get("state");
+  const signedState = verifyLineOAuthState(receivedState);
   const code = request.nextUrl.searchParams.get("code");
-  const returnTo = request.cookies.get("line_return_to")?.value || "/?screen=signin";
+  const stateIsValid = Boolean(
+    receivedState &&
+    ((expectedState && expectedState === receivedState) || signedState),
+  );
+  const returnTo = request.cookies.get("line_return_to")?.value || signedState?.returnTo || "/?screen=signin";
   const safeReturnUrl = new URL(returnTo, request.nextUrl.origin);
 
-  if (!expectedState || !receivedState || expectedState !== receivedState) {
-    return NextResponse.json({ error: "Invalid LINE OAuth state." }, { status: 400 });
+  if (!stateIsValid) {
+    safeReturnUrl.searchParams.set("line", "error");
+    safeReturnUrl.searchParams.set("reason", "oauth_state");
+    const response = NextResponse.redirect(safeReturnUrl);
+    cleanupOAuthCookies(response);
+    return response;
   }
   if (!code) {
-    return NextResponse.json({ error: "LINE authorization code is missing." }, { status: 400 });
+    safeReturnUrl.searchParams.set("line", "error");
+    safeReturnUrl.searchParams.set("reason", "missing_code");
+    const response = NextResponse.redirect(safeReturnUrl);
+    cleanupOAuthCookies(response);
+    return response;
   }
 
-  const redirectUri = request.cookies.get("line_redirect_uri")?.value || `${request.nextUrl.origin}/api/auth/line/callback`;
-  const requestedRole = normalizeRole(request.cookies.get("line_login_role")?.value || "seeker");
-  const clubCode = request.cookies.get("line_club_code")?.value || "";
-  const referralCode = request.cookies.get("line_referral_code")?.value || "";
+  const redirectUri = request.cookies.get("line_redirect_uri")?.value || signedState?.redirectUri || `${request.nextUrl.origin}/api/auth/line/callback`;
+  const requestedRole = normalizeRole(request.cookies.get("line_login_role")?.value || signedState?.role || "seeker");
+  const clubCode = request.cookies.get("line_club_code")?.value || signedState?.clubCode || "";
+  const referralCode = request.cookies.get("line_referral_code")?.value || signedState?.referralCode || "";
 
   try {
     const token = await exchangeLineCode(code, redirectUri);
