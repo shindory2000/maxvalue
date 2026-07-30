@@ -1573,7 +1573,7 @@ function Talent({ go, admin = false }: { go: (s: Screen) => void; admin?: boolea
         {admin && <div className="admin-account-tabs four"><button className={adminAccountType === "seeker" ? "active" : ""} onClick={() => setAdminAccountType("seeker")}>求職者</button><button className={adminAccountType === "club_staff" ? "active" : ""} onClick={() => setAdminAccountType("club_staff")}>お店</button><button className={adminAccountType === "ambassador" ? "active" : ""} onClick={() => setAdminAccountType("ambassador")}>アンバサダー</button><button className={adminAccountType === "admin" ? "active" : ""} onClick={() => setAdminAccountType("admin")}>管理者</button></div>}
         {!admin && <div className="store-talent-tabs"><button className={storeTalentTab === "new" ? "active" : ""} onClick={() => { setStoreTalentTab("new"); setInterestOnly(false); }}>新着求職者</button><button className={storeTalentTab === "offer_count" ? "active" : ""} onClick={() => { setStoreTalentTab("offer_count"); setInterestOnly(false); }}>オファー数順</button></div>}
         {admin ? <div className="admin-tabs">
-          <button className={adminTab === "users" ? "active" : ""} onClick={() => setAdminTab("users")}>ユーザー {dataLoading ? "…" : talentProfiles.length}</button>
+          <button className={adminTab === "users" ? "active" : ""} onClick={() => setAdminTab("users")}>ユーザー {dataLoading ? "…" : adminAccountType === "seeker" ? talentProfiles.length : adminAccounts.filter(account => account.role === adminAccountType).length}</button>
           <button className={adminTab === "offers" ? "active" : ""} onClick={() => setAdminTab("offers")}>オファー {dataLoading ? "…" : adminOffers.length}</button>
           <button className={adminTab === "interviews" ? "active" : ""} onClick={() => setAdminTab("interviews")}>面接</button>
           <button className={adminTab === "gacha" ? "active" : ""} onClick={() => setAdminTab("gacha")}>ガチャ {dataLoading ? "…" : adminGachaResults.length}</button>
@@ -1632,9 +1632,19 @@ function Talent({ go, admin = false }: { go: (s: Screen) => void; admin?: boolea
         setTalentProfiles(items => items.map(item => item.id === updated.id ? updated as AdminSeekerRecord : item));
       }} />}
       {editUser && <AdminUserEditModal seeker={editUser} close={() => setEditUser(null)} saved={updated => {
-        setTalentProfiles(items => items.map(item => item.id === updated.id ? updated : item));
-        setDetail(updated);
-        fetchAdminAccounts().then(items => setAdminAccounts(safeArray(items))).catch(() => undefined);
+        const nextRole = String(updated.role || "seeker") as AdminAccountRole;
+        setTalentProfiles(items => nextRole === "seeker"
+          ? items.map(item => item.id === updated.id ? updated : item)
+          : items.filter(item => item.id !== updated.id));
+        setDetail(null);
+        setAdminTab("users");
+        setAdminAccountType(nextRole);
+        Promise.all([fetchAdminAccounts(), fetchAdminSeekers()])
+          .then(([accounts, seekers]) => {
+            setAdminAccounts(safeArray(accounts));
+            setTalentProfiles(safeArray(seekers) as AdminSeekerRecord[]);
+          })
+          .catch(() => undefined);
         setEditUser(null);
       }} deleted={id => {
         setTalentProfiles(items => items.filter(item => item.id !== id));
@@ -1643,9 +1653,16 @@ function Talent({ go, admin = false }: { go: (s: Screen) => void; admin?: boolea
       }} />}
       {messageUser && <AdminMessageModal seeker={messageUser} close={() => setMessageUser(null)} />}
       {selectedAccount && <AdminAccountDetailModal account={selectedAccount} close={() => setSelectedAccount(null)} saved={updated => {
+        const nextRole = String(updated.role || "seeker") as AdminAccountRole;
         setAdminAccounts(items => items.map(item => String(item.id) === String(updated.id) ? { ...item, ...updated } : item));
-        fetchAdminAccounts().then(items => setAdminAccounts(safeArray(items))).catch(() => undefined);
-        fetchAdminSeekers().then(items => setTalentProfiles(safeArray(items) as AdminSeekerRecord[])).catch(() => undefined);
+        setAdminTab("users");
+        setAdminAccountType(nextRole);
+        Promise.all([fetchAdminAccounts(), fetchAdminSeekers()])
+          .then(([accounts, seekers]) => {
+            setAdminAccounts(safeArray(accounts));
+            setTalentProfiles(safeArray(seekers) as AdminSeekerRecord[]);
+          })
+          .catch(() => undefined);
         setSelectedAccount(null);
       }} />}
       <BottomNav role={admin ? "admin" : "club"} screen={admin ? "adminUsers" : "talent"} go={go} />
