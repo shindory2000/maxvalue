@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { buildLineAuthorizeUrl, getLineConfig, isLineLoginConfigured } from "@/lib/line";
+import { buildLineAuthorizeUrl, createLineOAuthState, getLineConfig, isLineLoginConfigured } from "@/lib/line";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +14,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const state = randomBytes(32).toString("hex");
   const returnTo = request.nextUrl.searchParams.get("returnTo") || "/?screen=offers";
-  const role = request.nextUrl.searchParams.get("role") || "seeker";
+  const requestedRole = request.nextUrl.searchParams.get("role") || "seeker";
+  const role = validRoles.has(requestedRole) ? requestedRole : "seeker";
   const clubCode = request.nextUrl.searchParams.get("clubCode") || "";
   const referralCode = request.nextUrl.searchParams.get("ref") || "";
   const configuredRedirectUri = getLineConfig().redirectUri;
@@ -24,6 +24,15 @@ export async function GET(request: NextRequest) {
   if (role === "admin" && !request.cookies.get("maxvalue_admin_pending")?.value) {
     return NextResponse.json({ error: "管理コードの確認が必要です。" }, { status: 403 });
   }
+  const state = createLineOAuthState({
+    nonce: randomBytes(32).toString("hex"),
+    returnTo,
+    role: role as "seeker" | "club_staff" | "ambassador" | "admin",
+    clubCode: clubCode || undefined,
+    referralCode: referralCode || undefined,
+    redirectUri,
+    issuedAt: Date.now(),
+  });
   const response = NextResponse.redirect(buildLineAuthorizeUrl(state, redirectUri));
   response.cookies.set("line_oauth_state", state, {
     httpOnly: true,
@@ -39,7 +48,7 @@ export async function GET(request: NextRequest) {
     maxAge: 600,
     path: "/",
   });
-  response.cookies.set("line_login_role", validRoles.has(role) ? role : "seeker", {
+  response.cookies.set("line_login_role", role, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
