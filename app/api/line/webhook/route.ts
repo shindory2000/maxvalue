@@ -178,14 +178,42 @@ async function resolveOffer(supabase: SupabaseServer, lineUserId: string, explic
 async function fetchOfferMeta(supabase: SupabaseServer, offerId: string) {
   const { data, error } = await supabase
     .from("offers")
-    .select("id,hourly_wage,status,bubble_raw")
+    .select("id,club_id,hourly_wage,status,bubble_raw")
     .eq("id", offerId)
     .maybeSingle();
   if (error) throw new Error(`offer meta lookup failed: ${error.message}`);
   return {
+    clubId: String(data?.club_id || ""),
     hourlyWage: Number(data?.hourly_wage || 0),
     bubbleRaw: (data?.bubble_raw || {}) as Record<string, unknown>,
   };
+}
+
+async function notifyClubOfSchedule(
+  supabase: SupabaseServer,
+  clubId: string,
+  nextAction: string | null | undefined,
+  selectedDate: string,
+) {
+  if (!clubId || !selectedDate) return false;
+  const { data: staffs } = await supabase
+    .from("club_staffs")
+    .select("user_id")
+    .eq("club_id", clubId)
+    .eq("is_active", true);
+  const staffUserIds = (staffs || []).map(staff => staff.user_id).filter(Boolean);
+  if (!staffUserIds.length) return false;
+  const { data: staffUsers } = await supabase
+    .from("users")
+    .select("line_user_id")
+    .in("id", staffUserIds);
+  const notification = `【日程確定】\n${nextActionLabel(nextAction)}\n希望日：${selectedDate.replaceAll("-", "/")}\n管理画面の「出したオファー」で詳細を確認してください。`;
+  const results = await Promise.allSettled(
+    (staffUsers || [])
+      .filter(user => user.line_user_id)
+      .map(user => sendLinePushMessage(String(user.line_user_id), [{ type: "text", text: notification }])),
+  );
+  return results.some(result => result.status === "fulfilled");
 }
 
 async function saveOfferResponse(
@@ -306,6 +334,7 @@ async function handleEvent(supabase: SupabaseServer | null, event: LineEvent) {
   }
 
   let persisted = true;
+  let storeLineSent = false;
   try {
     await saveOfferResponse(supabase, event, lineUserId, parsed.status, offerId, seekerId, {
       stage: parsed.stage,
@@ -313,6 +342,14 @@ async function handleEvent(supabase: SupabaseServer | null, event: LineEvent) {
       selectedDate: parsed.selectedDate,
       offeredHourlyWage: meta.hourlyWage,
     });
+    if (parsed.stage === "schedule_selected" && parsed.selectedDate) {
+      storeLineSent = await notifyClubOfSchedule(
+        supabase,
+        meta.clubId,
+        parsed.nextAction,
+        parsed.selectedDate,
+      );
+    }
   } catch (error) {
     // A temporary DB/schema issue must not make the LINE conversation appear
     // unresponsive. Continue the interaction and retain a detailed server log.
@@ -333,7 +370,7 @@ async function handleEvent(supabase: SupabaseServer | null, event: LineEvent) {
     replied,
     persisted,
   });
-  return { handled: true, kind: "offer_response", status: parsed.status, stage: parsed.stage, offerId, replied, persisted };
+  return { handled: true, kind: "offer_response", status: parsed.status, stage: parsed.stage, offerId, replied, persisted, storeLineSent };
 }
 
 export async function POST(request: NextRequest) {
