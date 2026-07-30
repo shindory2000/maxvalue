@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchLineBotProfile, getLineConfig, isLineLoginConfigured } from "@/lib/line";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { ADMIN_SESSION_COOKIE, getAdminSessionLineUserId } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,8 @@ function decodeCookie(value = "") {
 
 export async function GET(request: NextRequest) {
   const config = getLineConfig();
-  const userId = request.cookies.get("maxvalue_line_user_id")?.value || "";
+  const userId = request.cookies.get("maxvalue_line_user_id")?.value ||
+    getAdminSessionLineUserId(request.cookies.get(ADMIN_SESSION_COOKIE)?.value || "");
   const displayName = request.cookies.get("maxvalue_line_display_name")?.value || request.cookies.get("maxvalue_line_name")?.value || "";
   const pictureUrl = request.cookies.get("maxvalue_line_picture_url")?.value || "";
   const role = request.cookies.get("maxvalue_role")?.value || "";
