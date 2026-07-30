@@ -40,15 +40,26 @@ function inviteCodeFor(userId: string) {
   return `AM-${userId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10) || Date.now().toString(36)}`;
 }
 
-async function serializeAccounts(supabase: NonNullable<ReturnType<typeof getSupabaseServer>>, rows: AccountRow[]) {
+async function serializeAccounts(
+  supabase: NonNullable<ReturnType<typeof getSupabaseServer>>,
+  rows: AccountRow[],
+  currentLineUserId = "",
+) {
   const userIds = rows.map(user => user.id).filter(Boolean);
-  const { data: staffs } = userIds.length
-    ? await supabase
-      .from("club_staffs")
-      .select("user_id,club_id,staff_name,clubs(display_name)")
-      .in("user_id", userIds)
-    : { data: [] };
+  const [{ data: staffs }, { data: seekerProfiles }] = userIds.length
+    ? await Promise.all([
+      supabase
+        .from("club_staffs")
+        .select("user_id,club_id,staff_name,clubs(display_name)")
+        .in("user_id", userIds),
+      supabase
+        .from("seeker_profiles")
+        .select("id,user_id")
+        .in("user_id", userIds),
+    ])
+    : [{ data: [] }, { data: [] }];
   const staffMap = new Map((Array.isArray(staffs) ? staffs as StaffRow[] : []).map(staff => [staff.user_id, staff]));
+  const seekerProfileMap = new Map((Array.isArray(seekerProfiles) ? seekerProfiles : []).map(profile => [profile.user_id, profile.id]));
   const referredBy = new Map<string, Array<{ id: string; name: string; picture_url: string | null }>>();
   for (const candidate of rows) {
     const candidateRaw = asRecord(candidate.bubble_raw);
@@ -76,6 +87,8 @@ async function serializeAccounts(supabase: NonNullable<ReturnType<typeof getSupa
       club_name: club?.display_name || null,
       referral_count: referrals.length,
       referrals,
+      seeker_profile_id: seekerProfileMap.get(user.id) || null,
+      is_current_user: Boolean(currentLineUserId && user.line_user_id === currentLineUserId),
     };
   });
 }
@@ -95,7 +108,9 @@ export async function GET(request: NextRequest) {
     const legacyDeleted = asRecord(raw.admin_deleted);
     return !user.is_deleted && !user.deleted_at && !legacyDeleted.is_deleted && !raw.is_deleted;
   });
-  return NextResponse.json(await serializeAccounts(supabase, rows));
+  const currentLineUserId = request.cookies.get("maxvalue_line_user_id")?.value ||
+    getAdminSessionLineUserId(request.cookies.get(ADMIN_SESSION_COOKIE)?.value || "");
+  return NextResponse.json(await serializeAccounts(supabase, rows, currentLineUserId));
 }
 
 export async function PATCH(request: NextRequest) {
@@ -158,6 +173,6 @@ export async function PATCH(request: NextRequest) {
   if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 });
   if (!updated) return NextResponse.json({ error: "User update failed" }, { status: 500 });
 
-  const [serialized] = await serializeAccounts(supabase, [updated as AccountRow]);
+  const [serialized] = await serializeAccounts(supabase, [updated as AccountRow], requesterLineUserId);
   return NextResponse.json(serialized);
 }
