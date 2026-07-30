@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin";
+import { ADMIN_SESSION_COOKIE, getAdminSessionLineUserId, requireAdmin } from "@/lib/admin";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -117,6 +117,15 @@ export async function PATCH(request: NextRequest) {
     .maybeSingle();
   if (userError) return NextResponse.json({ error: userError.message }, { status: 500 });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  const requesterLineUserId = request.cookies.get("maxvalue_line_user_id")?.value ||
+    getAdminSessionLineUserId(request.cookies.get(ADMIN_SESSION_COOKIE)?.value || "");
+  if (requesterLineUserId && (user as AccountRow).line_user_id === requesterLineUserId && role !== "admin") {
+    return NextResponse.json(
+      { error: "ログイン中の管理者本人の権限は変更できません。上部の表示切替を使用してください。" },
+      { status: 400 },
+    );
+  }
 
   const raw = asRecord((user as AccountRow).bubble_raw);
   const adminExtra = asRecord(raw.admin_extra);
