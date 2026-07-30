@@ -520,16 +520,11 @@ function Landing({ go }: { go: (s: Screen) => void }) {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState<"company" | "terms" | "privacy" | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeStory, setActiveStory] = useState(0);
   const stories = landingStories;
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setLoading(false), 1100);
-    const storyTimer = window.setInterval(() => setActiveStory(current => (current + 1) % stories.length), 6200);
-    return () => {
-      window.clearTimeout(timer);
-      window.clearInterval(storyTimer);
-    };
+    const timer = window.setTimeout(() => setLoading(false), 850);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const modalCopy = {
@@ -539,62 +534,93 @@ function Landing({ go }: { go: (s: Screen) => void }) {
   } as const;
 
   return (
-    <main className="brand-site">
-      {loading && <motion.div className="brand-loader" initial={{ opacity: 1 }} exit={{ opacity: 0 }}><Logo light /><span>PRIVATE OFFER STORIES</span></motion.div>}
-      <nav className="brand-nav">
-        <Logo light />
-        <button className="brand-menu-button" onClick={() => setMenuOpen(true)} aria-label="メニュー"><Menu size={24} /></button>
+    <main className="brand-site playful-lp">
+      {loading && <motion.div className="brand-loader playful-loader" initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ delay: .55, duration: .3 }}><Logo light /><span>YOUR NEXT STAGE IS CALLING</span></motion.div>}
+      <nav className="brand-nav playful-nav">
+        <a href="#top" className="playful-logo"><Logo /></a>
+        <div className="playful-nav-links">
+          <a href="#concept">CONCEPT</a>
+          <a href="#features">FEATURES</a>
+          <a href="#how">HOW TO</a>
+        </div>
+        <LineLoginButton screen="setup" className="playful-nav-cta">LINEで無料登録</LineLoginButton>
+        <button className="brand-menu-button playful-menu-button" onClick={() => setMenuOpen(true)} aria-label="メニュー"><Menu size={24} /></button>
       </nav>
-      <section className="brand-cinema">
-        {stories.map((story, index) => index === activeStory && (
-          <motion.img
-            key={story.image}
-            src={story.image}
-            alt={story.alt}
-            initial={{ opacity: 0, scale: 1.06, x: "-2%" }}
-            animate={{ opacity: 1, scale: 1.11, x: "3%" }}
-            exit={{ opacity: 0 }}
-            transition={{ opacity: { duration: 1.4 }, scale: { duration: 6.2, ease: "easeOut" }, x: { duration: 6.2, ease: "easeOut" } }}
-          />
-        ))}
-        <div className="brand-cinema-shade" />
-        <motion.div key={stories[activeStory].label} className="brand-mini-copy" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2 }}>
-          <span>{String(activeStory + 1).padStart(2, "0")}</span>
-          <h1>{stories[activeStory].label}</h1>
-          <p>{stories[activeStory].copy}</p>
-        </motion.div>
-        <div className="brand-story-dots" aria-label="ストーリー選択">{stories.map((story, index) => <button key={story.label} type="button" aria-label={`${story.label}を表示`} aria-pressed={activeStory === index} className={activeStory === index ? "active" : ""} onClick={() => setActiveStory(index)} />)}</div>
-        <LineLoginButton screen="setup" className="brand-elegant-line">LINEで登録する</LineLoginButton>
+
+      <section id="top" className="playful-hero">
+        <motion.img src={stories[0]?.image} alt={stories[0]?.alt || "MAXVALUE"} initial={{ scale: 1.08 }} animate={{ scale: 1 }} transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }} />
+        <div className="playful-hero-wash" />
+        <div className="playful-hero-copy">
+          <motion.span initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .35 }}>PRIVATE OFFER PLATFORM</motion.span>
+          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .45, duration: .8 }}>
+            選ばれる前に、<br/><em>選べ。</em>
+          </motion.h1>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .85 }}>あなたを探しているお店から、条件つきのオファーが届く。</motion.p>
+          <LineLoginButton screen="setup" className="playful-hero-cta">LINEで無料登録 <ArrowRight size={18}/></LineLoginButton>
+        </div>
+        <div className="playful-badge"><b>01</b><span>登録は<br/>ニックネームでOK</span></div>
       </section>
-      <section className="brand-service-intro">
-        <span className="brand-section-label">PRIVATE OFFER SERVICE</span>
-        <h2>あなたを探しているお店から、<br/>条件つきのオファーが届く。</h2>
-        <p>プロフィールを登録したら、あとは待つだけ。希望エリアや働き方に合うお店から届いた条件を、落ち着いて比較できます。</p>
-        <div className="brand-benefit-grid">
-          <article><Mail/><b>オファーを比較</b><small>時給・保証期間・お店の魅力をひとつの画面で確認</small></article>
-          <article><ShieldCheck/><b>プロフィールを保護</b><small>登録情報はオファーのために必要な店舗だけが確認</small></article>
-          <article><Gift/><b>限定リワード</b><small>登録・招待・面接で楽しめるMAXVALUEガチャ</small></article>
+
+      <div className="playful-marquee" aria-hidden="true"><div>YOUR VALUE, YOUR CHOICE.　MAXVALUE　YOUR VALUE, YOUR CHOICE.　MAXVALUE　YOUR VALUE, YOUR CHOICE.　MAXVALUE</div></div>
+
+      <section id="concept" className="playful-concept">
+        <div className="playful-section-index">CONCEPT / 01</div>
+        <FadeIn>
+          <span className="playful-kicker">HAVE A NICE OFFER!</span>
+          <h2>条件を比べて、<br/>自分で決める。</h2>
+          <p>お店を探し回るのではなく、プロフィールを登録して待つだけ。時給・保証期間・お店の魅力を見比べて、気になるオファーだけ選べます。</p>
+        </FadeIn>
+        <div className="playful-concept-stamp"><Sparkles/><b>待つだけで<br/>オファーが届く</b></div>
+      </section>
+
+      <section id="features" className="playful-features">
+        <div className="playful-section-index light">FEATURES / 02</div>
+        <div className="playful-feature-heading">
+          <span>MAXVALUEで変わること</span>
+          <h2>主役は、<br/>あなた。</h2>
+        </div>
+        <div className="playful-feature-cards">
+          <FadeIn className="playful-feature-card purple"><i>01</i><Mail/><h3>条件が先に届く</h3><p>時給・保証期間・コメントを確認してから判断できます。</p></FadeIn>
+          <FadeIn className="playful-feature-card blue"><i>02</i><ShieldCheck/><h3>見られ方を選べる</h3><p>現在勤務店や見られたくないお店を設定して、プロフィールを守れます。</p></FadeIn>
+          <FadeIn className="playful-feature-card pink"><i>03</i><Gift/><h3>登録から楽しめる</h3><p>登録・招待・面接でガチャチケットを獲得。限定リワードに挑戦できます。</p></FadeIn>
         </div>
       </section>
-      <section className="brand-how">
-        <div><span className="brand-section-label">HOW IT WORKS</span><h2>はじめ方は、3ステップ。</h2></div>
-        <ol>
-          <li><i>01</i><b>LINEで登録</b><small>ニックネームと希望条件を入力</small></li>
-          <li><i>02</i><b>オファーを受け取る</b><small>お店から届く条件を比較</small></li>
-          <li><i>03</i><b>日程を決める</b><small>話を聞く・体験するを選んで連絡</small></li>
-        </ol>
-        <LineLoginButton screen="setup" className="brand-bottom-line">無料で始める</LineLoginButton>
+
+      <section className="playful-gallery">
+        {stories.slice(0, 3).map((story, index) => <motion.figure key={story.image} whileHover={{ y: -10, rotate: index - 1 }}><img src={story.image} alt={story.alt}/><figcaption><b>0{index + 1}</b><span>{story.label}</span></figcaption></motion.figure>)}
       </section>
-      <footer className="brand-new-footer">
+
+      <section id="how" className="playful-how">
+        <div className="playful-section-index">HOW TO / 03</div>
+        <div className="playful-how-title"><span>START IN 3 STEPS</span><h2>はじめ方は、<br/>びっくりするほど簡単。</h2></div>
+        <ol>
+          <li><b>01</b><div><strong>LINEで登録</strong><small>本名は不要。ニックネームと希望条件を入力</small></div></li>
+          <li><b>02</b><div><strong>オファーを待つ</strong><small>あなたを探しているお店から条件が届く</small></div></li>
+          <li><b>03</b><div><strong>気になるものを選ぶ</strong><small>話を聞く・体験するを自分で決める</small></div></li>
+        </ol>
+      </section>
+
+      <section className="playful-final">
+        <div className="playful-final-orbit orbit-a">MAXVALUE • PRIVATE OFFER •</div>
+        <div className="playful-final-orbit orbit-b">YOUR VALUE • YOUR CHOICE •</div>
+        <span>READY?</span>
+        <h2>次のステージを、<br/>待つだけで。</h2>
+        <LineLoginButton screen="setup" className="playful-final-cta">LINEで無料登録 <ArrowRight size={18}/></LineLoginButton>
+        <small>登録無料・本名不要</small>
+      </section>
+
+      <footer className="brand-new-footer playful-footer">
         <Logo light />
         <div><button onClick={() => setModal("company")}>会社情報</button><button onClick={() => setModal("terms")}>利用規約</button><button onClick={() => setModal("privacy")}>プライバシー</button></div>
       </footer>
-      {menuOpen && <div className="brand-menu-panel">
+
+      {menuOpen && <div className="brand-menu-panel playful-menu-panel">
         <button className="modal-x" onClick={() => setMenuOpen(false)}><X /></button>
         <Logo light />
+        <a href="#concept" onClick={() => setMenuOpen(false)}>CONCEPT</a>
+        <a href="#features" onClick={() => setMenuOpen(false)}>FEATURES</a>
+        <a href="#how" onClick={() => setMenuOpen(false)}>HOW TO</a>
         <button onClick={() => { setModal("company"); setMenuOpen(false); }}>会社情報</button>
-        <button onClick={() => { setModal("terms"); setMenuOpen(false); }}>利用規約</button>
-        <button onClick={() => { setModal("privacy"); setMenuOpen(false); }}>プライバシーポリシー</button>
         <button onClick={() => go("clubSignin")}>店舗の方</button>
         <a href="/api/auth/line/start?role=ambassador&returnTo=/?screen=ambassadorProfile">アンバサダー</a>
         <button onClick={() => go("adminSignin")}>管理者</button>
