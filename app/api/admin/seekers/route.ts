@@ -331,7 +331,8 @@ export async function DELETE(request: NextRequest) {
       }).eq("id", profile.user_id);
       if (resetUserError) throw resetUserError;
 
-      const sessionCleared = request.cookies.get("maxvalue_line_user_id")?.value === user?.line_user_id;
+      const isCurrentSession = request.cookies.get("maxvalue_line_user_id")?.value === user?.line_user_id;
+      const sessionCleared = isCurrentSession && effectiveRole === "seeker";
       const response = NextResponse.json({
         ok: true,
         resetOnly: true,
