@@ -14,8 +14,8 @@ import { Component, CSSProperties, FormEvent, ReactNode, createContext, useCallb
 import type { ErrorInfo } from "react";
 import { motion } from "framer-motion";
 import {
-  bootstrapTemporaryUser, ensureTemporaryLineUserId, getActiveLineUserId,
-  getActiveLinePictureUrl, getReferralCode, fetchAdminGachaResults,
+  bootstrapTemporaryUser, ensureTemporaryLineUserId, getActiveLineDisplayName,
+  getActiveLineUserId, getActiveLinePictureUrl, getReferralCode, fetchAdminGachaResults,
   fetchAdminOffers, fetchClubs, fetchGachaItems, fetchGachaState, fetchOffers,
   fetchSeekerProfile, fetchSeekers,
   saveSeekerProfile, spinGacha,
@@ -775,7 +775,7 @@ function Setup({ go, club = false }: { go: (s: Screen) => void; club?: boolean }
   const [formError, setFormError] = useState("");
   const [invalidFields, setInvalidFields] = useState<Record<string, string>>({});
   const [lineUserId, setLineUserId] = useState("");
-  const [nickname, setNickname] = useState("");
+  const [nickname, setNickname] = useState(() => getActiveLineDisplayName());
   const [linePictureUrl, setLinePictureUrl] = useState("");
   const [age, setAge] = useState("");
   const [workExperience, setWorkExperience] = useState("");
@@ -804,11 +804,14 @@ function Setup({ go, club = false }: { go: (s: Screen) => void; club?: boolean }
     const activeLineUserId = getActiveLineUserId();
     setLineUserId(activeLineUserId);
     setLinePictureUrl(getActiveLinePictureUrl());
+    const savedLineDisplayName = getActiveLineDisplayName();
+    if (savedLineDisplayName) setNickname(current => current || savedLineDisplayName);
     fetch("/api/auth/line/status")
       .then(response => response.json())
       .then(status => {
         if (status.profile?.line_user_id || status.profile?.userId) setLineUserId(status.profile.line_user_id || status.profile.userId);
-        if ((status.profile?.line_display_name || status.profile?.displayName) && !nickname) setNickname(status.profile.line_display_name || status.profile.displayName);
+        const statusDisplayName = status.profile?.line_display_name || status.profile?.displayName;
+        if (statusDisplayName) setNickname(current => current || statusDisplayName);
         if (status.profile?.line_picture_url || status.profile?.pictureUrl) setLinePictureUrl(status.profile.line_picture_url || status.profile.pictureUrl);
       })
       .catch(() => undefined);
@@ -1083,7 +1086,7 @@ function Setup({ go, club = false }: { go: (s: Screen) => void; club?: boolean }
         {formError && <div className="form-error">{formError}</div>}
       </section>
       <div className="setup-actions"><Button kind="secondary" onClick={() => step > 1 ? setStep(step - 1) : go(club ? "clubSignin" : "signin")}>戻る</Button><Button onClick={next} disabled={saving || uploading.some(Boolean)}>{uploading.some(Boolean) ? "写真アップロード中..." : saving ? "保存中..." : step === max ? "登録を完了" : "次へ"} <ArrowRight size={18} /></Button></div>
-      {registrationComplete && <div className="modal-backdrop"><div className="result-modal registration-complete-modal" role="dialog" aria-modal="true" aria-labelledby="registration-complete-title"><div className="result-icon"><Sparkles/><Ticket/></div><span>WELCOME TO MAXVALUE</span><h2 id="registration-complete-title">ご登録ありがとうございます</h2><p>登録特典として、ガチャチケットを1枚付与しました。</p><Button onClick={() => go("gacha")}><Gift size={18}/> ガチャを引く</Button><Button kind="secondary" onClick={() => go("offers")}>あとで確認する</Button></div></div>}
+      {registrationComplete && <div className="modal-backdrop"><div className="result-modal registration-complete-modal" role="dialog" aria-modal="true" aria-labelledby="registration-complete-title"><div className="result-icon"><Sparkles/><Ticket/></div><span>WELCOME TO MAXVALUE</span><h2 id="registration-complete-title">ご登録ありがとうございます</h2><p>登録特典として、ガチャチケットを1枚付与しました。</p><div className="registration-complete-actions"><Button onClick={() => go("gacha")}><Gift size={18}/> ガチャを引く</Button><Button kind="secondary" onClick={() => go("offers")}>あとで確認する</Button></div></div></div>}
     </main>
   );
 }
