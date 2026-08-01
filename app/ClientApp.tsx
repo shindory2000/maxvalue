@@ -1206,17 +1206,33 @@ function Gacha({ go }: { go: (s: Screen) => void }) {
       setDrawing(false);
     }
   };
+  const prizeKind = (item: GachaItemRecord) => {
+    const name = String(item.name || "").toUpperCase();
+    if (name.includes("SOUMEI BLUE")) return "blue";
+    if (name.includes("SOUMEI")) return "soumei";
+    return "standard";
+  };
+  const baseProbability = (item: GachaItemRecord) => {
+    const kind = prizeKind(item);
+    if (kind === "blue") return 0;
+    if (kind === "soumei") return .01;
+    if (String(item.name || "").includes("コーラ")) return item.ticket_type === "interview" ? .79 : .39;
+    return Number(item.probability || 0);
+  };
   const probabilityWeight = (item: GachaItemRecord) => {
     const rarity = String(item.rarity || "").toUpperCase();
     const high = ["UR", "SSR", "S"].includes(rarity);
     const middle = ["SR", "A"].includes(rarity);
     const multiplier = rank === "S" ? (high ? 1.4 : middle ? 1.15 : .82) : rank === "B" ? (high ? .75 : middle ? .9 : 1.15) : rank === "C" ? (high ? .5 : middle ? .75 : 1.35) : 1;
-    return Number(item.probability || 0) * multiplier;
+    return baseProbability(item) * multiplier;
   };
   const formatProbability = (item: GachaItemRecord, items: GachaItemRecord[]) => {
-    const total = items.reduce((sum, current) => sum + probabilityWeight(current), 0);
+    const kind = prizeKind(item);
+    if (kind === "blue") return "0.00%";
+    if (kind === "soumei") return "1.00%";
+    const total = items.reduce((sum, current) => prizeKind(current) === "standard" ? sum + probabilityWeight(current) : sum, 0);
     if (!total) return "設定中";
-    return `${((probabilityWeight(item) / total) * 100).toFixed(2)}%`;
+    return `${((probabilityWeight(item) / total) * 99).toFixed(2)}%`;
   };
   const requestPrize = async (item: GachaItemRecord) => {
     setRequestingPrize(true);
@@ -1234,7 +1250,7 @@ function Gacha({ go }: { go: (s: Screen) => void }) {
   };
   return (
     <main className="app-shell gacha-page premium-gacha">
-      <AppHeader title="ガチャ" action={<div className="gacha-wallet-mini ticket-split"><span title="ガチャチケット"><i className="ticket-icon silver"><Ticket size={17}/></i>{tickets.registration_invite}</span><span title="面接チケット"><i className="ticket-icon gold"><Ticket size={17}/></i>{tickets.interview}</span></div>} />
+      <AppHeader title="ガチャ" action={<div className="gacha-wallet-mini ticket-split"><span title="ガチャチケット"><i className="ticket-icon silver"><Ticket size={17}/></i>{tickets.registration_invite}</span><span title="ゴールドチケット"><i className="ticket-icon gold"><Ticket size={17}/></i>{tickets.interview}</span></div>} />
       <section className="gacha-dashboard">
         <div className="gacha-heading compact"><span>PREMIUM REWARDS</span></div>
         <article className="gacha-campaign registration-card bubble-gacha-card">
@@ -1245,9 +1261,9 @@ function Gacha({ go }: { go: (s: Screen) => void }) {
         </article>
         <article className="gacha-campaign interview-card bubble-gacha-card">
           <img className="bubble-gacha-image" src="/optimized-assets/300-users-campaign.jpg" alt="300ユーザー突破ゴールドチケット限定ガチャ" />
-          <div className="campaign-copy"><span>面接後限定ガチャ</span><h2>面接後限定ガチャ</h2><p>面接チケットだけの限定ラインナップ。来店後の楽しみをもう一つ。</p></div>
-          <button className="odds-button" onClick={() => setOddsOpen({ title: "面接後限定ガチャ", items: interviewItems })}>当選確率</button>
-          {tickets.interview > 0 ? <Button kind="secondary" onClick={() => spin("interview")} disabled={drawing}>面接チケットで回す</Button> : <Button kind="secondary" className="invite-spin-button" onClick={() => setInviteOpen(true)}>招待してチケットをもらう</Button>}
+          <div className="campaign-copy"><span>面接後にもらえるゴールドチケット</span><h2>ゴールドチケットガチャ</h2><p>ゴールドチケットだけの限定ラインナップ。来店後の楽しみをもう一つ。</p></div>
+          <button className="odds-button" onClick={() => setOddsOpen({ title: "ゴールドチケットガチャ", items: interviewItems })}>当選確率</button>
+          {tickets.interview > 0 ? <Button kind="secondary" onClick={() => spin("interview")} disabled={drawing}>ゴールドチケットで回す</Button> : <Button kind="secondary" className="invite-spin-button" onClick={() => setInviteOpen(true)}>ゴールドチケットをもらう</Button>}
         </article>
       </section>
       {drawing && <div className="gacha-draw-overlay soda-draw"><div className="soda-bubbles">{Array.from({length: 54}, (_, i) => {
