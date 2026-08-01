@@ -19,7 +19,7 @@ async function fetchOfferResponses(
 
   // Production databases that have not received the scheduling migration yet
   // still keep these values in line_payload.
-  if (/response_status|next_action|selected_date|response_source/i.test(direct.error.message)) {
+  if (/status|next_action|selected_date|response_source/i.test(direct.error.message)) {
     const fallback = await supabase
       .from("offer_responses")
       .select("offer_id,response,line_payload,created_at")
