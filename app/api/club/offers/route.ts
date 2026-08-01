@@ -16,7 +16,7 @@ async function fetchOfferResponses(
     .in("offer_id", offerIds)
     .order("created_at", { ascending: false });
   if (!direct.error) return direct.data || [];
-  if (/response_status|next_action|selected_date|offered_hourly_wage|response_source/i.test(direct.error.message)) {
+  if (/status|next_action|selected_date|offered_hourly_wage|response_source/i.test(direct.error.message)) {
     const fallback = await supabase
       .from("offer_responses")
       .select("offer_id,response,line_payload,created_at")
