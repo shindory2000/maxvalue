@@ -691,6 +691,7 @@ function Setup({ go, club = false }: { go: (s: Screen) => void; club?: boolean }
   const [step, setStep] = useState(1);
   const [uploaded, setUploaded] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
   const [formError, setFormError] = useState("");
   const [invalidFields, setInvalidFields] = useState<Record<string, string>>({});
   const [lineUserId, setLineUserId] = useState("");
@@ -899,7 +900,7 @@ function Setup({ go, club = false }: { go: (s: Screen) => void; club?: boolean }
           desiredClubIds,
           referralCode: getReferralCode(),
       });
-      go("gacha");
+      setRegistrationComplete(true);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "プロフィール保存に失敗しました。もう一度お試しください。");
       scrollToFirstError();
@@ -1002,6 +1003,7 @@ function Setup({ go, club = false }: { go: (s: Screen) => void; club?: boolean }
         {formError && <div className="form-error">{formError}</div>}
       </section>
       <div className="setup-actions"><Button kind="secondary" onClick={() => step > 1 ? setStep(step - 1) : go(club ? "clubSignin" : "signin")}>戻る</Button><Button onClick={next} disabled={saving || uploading.some(Boolean)}>{uploading.some(Boolean) ? "写真アップロード中..." : saving ? "保存中..." : step === max ? "登録を完了" : "次へ"} <ArrowRight size={18} /></Button></div>
+      {registrationComplete && <div className="modal-backdrop"><div className="result-modal registration-complete-modal" role="dialog" aria-modal="true" aria-labelledby="registration-complete-title"><div className="result-icon"><Sparkles/><Ticket/></div><span>WELCOME TO MAXVALUE</span><h2 id="registration-complete-title">ご登録ありがとうございます</h2><p>登録特典として、ガチャチケットを1枚付与しました。</p><Button onClick={() => go("gacha")}><Gift size={18}/> ガチャを引く</Button><Button kind="secondary" onClick={() => go("offers")}>あとで確認する</Button></div></div>}
     </main>
   );
 }
