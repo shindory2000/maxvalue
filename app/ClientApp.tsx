@@ -202,7 +202,7 @@ function offerStatusLabel(status: unknown) {
 
 function nextActionLabel(value: unknown) {
   if (value === "trial_shift") return "体験する";
-  if (value === "consultation_only") return "話を聞くだけ";
+  if (value === "consultation_only") return "面接";
   return "未選択";
 }
 
@@ -534,87 +534,84 @@ function Landing({ go }: { go: (s: Screen) => void }) {
   } as const;
 
   return (
-    <main className="brand-site playful-lp">
+    <main className="brand-site editorial-lp">
       {loading && <motion.div className="brand-loader playful-loader" initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ delay: .55, duration: .3 }}><Logo light /><span>YOUR NEXT STAGE IS CALLING</span></motion.div>}
-      <nav className="brand-nav playful-nav">
-        <a href="#top" className="playful-logo"><Logo /></a>
-        <div className="playful-nav-links">
+      <nav className="brand-nav editorial-nav">
+        <a href="#top" className="editorial-logo"><Logo /></a>
+        <div className="editorial-nav-links">
           <a href="#concept">CONCEPT</a>
           <a href="#features">FEATURES</a>
           <a href="#how">HOW TO</a>
         </div>
-        <LineLoginButton screen="setup" className="playful-nav-cta">LINEで無料登録</LineLoginButton>
-        <button className="brand-menu-button playful-menu-button" onClick={() => setMenuOpen(true)} aria-label="メニュー"><Menu size={24} /></button>
+        <LineLoginButton screen="setup" className="editorial-nav-cta">LINEで無料登録 <ArrowRight size={16}/></LineLoginButton>
+        <button className="brand-menu-button editorial-menu-button" onClick={() => setMenuOpen(true)} aria-label="メニュー"><Menu size={24} /></button>
       </nav>
 
-      <section id="top" className="playful-hero">
+      <section id="top" className="editorial-hero">
         <motion.img src={stories[0]?.image} alt={stories[0]?.alt || "MAXVALUE"} initial={{ scale: 1.08 }} animate={{ scale: 1 }} transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }} />
-        <div className="playful-hero-wash" />
-        <div className="playful-hero-copy">
-          <motion.span initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .35 }}>PRIVATE OFFER PLATFORM</motion.span>
+        <div className="editorial-hero-wash" />
+        <div className="editorial-hero-copy">
+          <motion.span initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .35 }}>NIGHT WORK, REIMAGINED.</motion.span>
           <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .45, duration: .8 }}>
-            選ばれる前に、<br/><em>選べ。</em>
+            選ばれる前に、<br/><em>選ぶ。</em>
           </motion.h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .85 }}>あなたを探しているお店から、条件つきのオファーが届く。</motion.p>
-          <LineLoginButton screen="setup" className="playful-hero-cta">LINEで無料登録 <ArrowRight size={18}/></LineLoginButton>
+          <motion.div className="editorial-hero-bottom" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .85 }}>
+            <p>あなたを探しているお店から、条件つきのオファーが届く。新しい夜の仕事選びを、もっと自由に。</p>
+            <LineLoginButton screen="setup" className="editorial-hero-cta">LINEで無料登録 <ArrowRight size={18}/></LineLoginButton>
+          </motion.div>
         </div>
-        <div className="playful-badge"><b>01</b><span>登録は<br/>ニックネームでOK</span></div>
+        <div className="editorial-scroll">SCROLL TO EXPLORE <span>↓</span></div>
       </section>
 
-      <div className="playful-marquee" aria-hidden="true"><div>YOUR VALUE, YOUR CHOICE.　MAXVALUE　YOUR VALUE, YOUR CHOICE.　MAXVALUE　YOUR VALUE, YOUR CHOICE.　MAXVALUE</div></div>
+      <div className="editorial-marquee" aria-hidden="true"><div>YOUR VALUE, YOUR CHOICE.　#PRIVATE OFFER　#NICKNAME ONLY　#YOUR NEXT STAGE　YOUR VALUE, YOUR CHOICE.　#PRIVATE OFFER　#NICKNAME ONLY　#YOUR NEXT STAGE　</div></div>
 
-      <section id="concept" className="playful-concept">
-        <div className="playful-section-index">CONCEPT / 01</div>
-        <FadeIn>
-          <span className="playful-kicker">HAVE A NICE OFFER!</span>
-          <h2>条件を比べて、<br/>自分で決める。</h2>
-          <p>お店を探し回るのではなく、プロフィールを登録して待つだけ。時給・保証期間・お店の魅力を見比べて、気になるオファーだけ選べます。</p>
+      <section id="concept" className="editorial-concept">
+        <div className="editorial-section-label">01 — CONCEPT</div>
+        <FadeIn className="editorial-concept-copy">
+          <span>DON&apos;T CHASE.<br/>BE CHOSEN.</span>
+          <h2>探し回るから、<br/>届いた条件を選ぶへ。</h2>
+          <p>プロフィールを登録したら、あとは待つだけ。時給、保証期間、お店の雰囲気。大切な条件を先に見て、会いたいお店だけを自分で選べます。</p>
         </FadeIn>
-        <div className="playful-concept-stamp"><Sparkles/><b>待つだけで<br/>オファーが届く</b></div>
+        <div className="editorial-facts"><div><b>0円</b><span>登録・利用料</span></div><div><b>本名不要</b><span>ニックネームで登録</span></div><div><b>24H</b><span>いつでもオファー確認</span></div></div>
       </section>
 
-      <section id="features" className="playful-features">
-        <div className="playful-section-index light">FEATURES / 02</div>
-        <div className="playful-feature-heading">
-          <span>MAXVALUEで変わること</span>
-          <h2>主役は、<br/>あなた。</h2>
-        </div>
-        <div className="playful-feature-cards">
-          <FadeIn className="playful-feature-card purple"><i>01</i><Mail/><h3>条件が先に届く</h3><p>時給・保証期間・コメントを確認してから判断できます。</p></FadeIn>
-          <FadeIn className="playful-feature-card blue"><i>02</i><ShieldCheck/><h3>見られ方を選べる</h3><p>現在勤務店や見られたくないお店を設定して、プロフィールを守れます。</p></FadeIn>
-          <FadeIn className="playful-feature-card pink"><i>03</i><Gift/><h3>登録から楽しめる</h3><p>登録・招待・面接でガチャチケットを獲得。限定リワードに挑戦できます。</p></FadeIn>
+      <section id="features" className="editorial-features">
+        <div className="editorial-section-label">02 — WHAT CHANGES</div>
+        <h2>主役は、<br/>いつだってあなた。</h2>
+        <div className="editorial-feature-list">
+          <FadeIn className="editorial-feature-row"><b>01</b><Mail/><h3>条件を見てから選ぶ</h3><p>時給・保証期間・コメントを確認して、気になるオファーにだけ返答。</p><ArrowRight/></FadeIn>
+          <FadeIn className="editorial-feature-row"><b>02</b><ShieldCheck/><h3>見られ方を自分で決める</h3><p>現在勤務店や見られたくないお店を設定し、プロフィールを安全に管理。</p><ArrowRight/></FadeIn>
+          <FadeIn className="editorial-feature-row"><b>03</b><Gift/><h3>次の一歩を楽しむ</h3><p>登録・招待・面接でチケットを獲得。限定リワードが当たるガチャへ。</p><ArrowRight/></FadeIn>
         </div>
       </section>
 
-      <section className="playful-gallery">
-        {stories.slice(0, 3).map((story, index) => <motion.figure key={story.image} whileHover={{ y: -10, rotate: index - 1 }}><img src={story.image} alt={story.alt}/><figcaption><b>0{index + 1}</b><span>{story.label}</span></figcaption></motion.figure>)}
+      <section className="editorial-stories">
+        <div className="editorial-stories-heading"><div className="editorial-section-label">03 — STORIES</div><h2>自分らしい夜を、<br/>自分で選んだ人たち。</h2></div>
+        <div className="editorial-story-grid">{stories.map((story, index) => <motion.figure key={story.image} whileHover={{ y: -8 }}><img src={story.image} alt={story.alt}/><figcaption><span>STORY 0{index + 1}</span><h3>{story.copy}</h3><b>{story.label}</b></figcaption></motion.figure>)}</div>
       </section>
 
-      <section id="how" className="playful-how">
-        <div className="playful-section-index">HOW TO / 03</div>
-        <div className="playful-how-title"><span>START IN 3 STEPS</span><h2>はじめ方は、<br/>びっくりするほど簡単。</h2></div>
-        <ol>
+      <section id="how" className="editorial-how">
+        <div className="editorial-section-label">04 — HOW TO START</div>
+        <div className="editorial-how-title"><span>ONLY THREE STEPS</span><h2>はじめ方は、<br/>驚くほどシンプル。</h2></div>
+        <ol className="editorial-steps">
           <li><b>01</b><div><strong>LINEで登録</strong><small>本名は不要。ニックネームと希望条件を入力</small></div></li>
           <li><b>02</b><div><strong>オファーを待つ</strong><small>あなたを探しているお店から条件が届く</small></div></li>
-          <li><b>03</b><div><strong>気になるものを選ぶ</strong><small>話を聞く・体験するを自分で決める</small></div></li>
+          <li><b>03</b><div><strong>気になるお店を選ぶ</strong><small>面接・体験へ進むかを自分で決める</small></div></li>
         </ol>
       </section>
 
-      <section className="playful-final">
-        <div className="playful-final-orbit orbit-a">MAXVALUE • PRIVATE OFFER •</div>
-        <div className="playful-final-orbit orbit-b">YOUR VALUE • YOUR CHOICE •</div>
-        <span>READY?</span>
-        <h2>次のステージを、<br/>待つだけで。</h2>
-        <LineLoginButton screen="setup" className="playful-final-cta">LINEで無料登録 <ArrowRight size={18}/></LineLoginButton>
-        <small>登録無料・本名不要</small>
+      <section className="editorial-final">
+        <span>READY FOR YOUR NEXT STAGE?</span>
+        <h2>次のステージは、<br/>もうあなたを探している。</h2>
+        <div><LineLoginButton screen="setup" className="editorial-final-cta">LINEで無料登録 <ArrowRight size={18}/></LineLoginButton><small>登録無料 / 本名不要 / 18歳以上</small></div>
       </section>
 
-      <footer className="brand-new-footer playful-footer">
+      <footer className="brand-new-footer editorial-footer">
         <Logo light />
         <div><button onClick={() => setModal("company")}>会社情報</button><button onClick={() => setModal("terms")}>利用規約</button><button onClick={() => setModal("privacy")}>プライバシー</button></div>
       </footer>
 
-      {menuOpen && <div className="brand-menu-panel playful-menu-panel">
+      {menuOpen && <div className="brand-menu-panel editorial-menu-panel">
         <button className="modal-x" onClick={() => setMenuOpen(false)}><X /></button>
         <Logo light />
         <a href="#concept" onClick={() => setMenuOpen(false)}>CONCEPT</a>
@@ -1040,12 +1037,14 @@ function Offers({ go }: { go: (s: Screen) => void }) {
   const [scheduleOffer, setScheduleOffer] = useState<OfferRecord | null>(null);
   const [scheduleAction, setScheduleAction] = useState<"consultation_only" | "trial_shift" | "">("");
   const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleEditing, setScheduleEditing] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [responding, setResponding] = useState(false);
   const [offerMessage, setOfferMessage] = useState("");
   const [offerFilter, setOfferFilter] = useState<"all" | "interested" | "rejected">("all");
   const loadingOffersRef = useRef(false);
+  const scheduleDeepLinkHandledRef = useRef(false);
   const loadOffers = useCallback(async () => {
     if (loadingOffersRef.current) return;
     loadingOffersRef.current = true;
@@ -1091,6 +1090,24 @@ function Offers({ go }: { go: (s: Screen) => void }) {
     };
   }, [loadOffers]);
 
+  useEffect(() => {
+    if (scheduleDeepLinkHandledRef.current || !offers.length) return;
+    const params = new URLSearchParams(window.location.search);
+    const offerId = params.get("scheduleOffer");
+    if (!offerId) return;
+    const target = offers.find(offer => offer.id === offerId);
+    if (!target) return;
+    const requestedAction = params.get("nextAction");
+    scheduleDeepLinkHandledRef.current = true;
+    setScheduleOffer(target);
+    setScheduleAction(requestedAction === "trial_shift" ? "trial_shift" : "consultation_only");
+    setScheduleDate(target.selected_date || "");
+    setScheduleEditing(true);
+    params.delete("scheduleOffer");
+    params.delete("nextAction");
+    window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+  }, [offers]);
+
   const react = async (offer: OfferRecord, status: OfferRecord["status"], date?: string, nextAction?: "consultation_only" | "trial_shift", cancel = false) => {
     setResponding(true);
     setOfferMessage("");
@@ -1130,6 +1147,7 @@ function Offers({ go }: { go: (s: Screen) => void }) {
       setScheduleOffer(null);
       setScheduleAction("");
       setScheduleDate("");
+      setScheduleEditing(false);
       setCancelOpen(false);
       setCancelReason("");
       void loadOffers();
@@ -1155,16 +1173,16 @@ function Offers({ go }: { go: (s: Screen) => void }) {
             <p className="offer-note">「{o.note}」</p>
             {o.selected_date && <div className="current-schedule offer-card-schedule"><b>{o.next_action === "trial_shift" ? "体験予定" : "面接予定"}</b><strong>{formatDate(o.selected_date)}</strong><small>変更・キャンセルは下のボタンから行えます</small></div>}
             {o.response_status === "canceled" && <div className="inline-notice">この日程はキャンセル済みです。再調整する場合は「興味あり」から日程を選んでください。</div>}
-            <div className="offer-buttons">
-              <Button kind={o.status === "rejected" ? "secondary" : "ghost"} onClick={() => react(o, "rejected")} disabled={responding}>{o.status === "rejected" ? <><Check size={17}/> 見送り選択中</> : "今回は見送る"}</Button>
-              <Button onClick={() => { setScheduleOffer(o); setScheduleAction((o.next_action as "consultation_only" | "trial_shift") || ""); setScheduleDate(o.selected_date || ""); }} disabled={responding}>{o.selected_date ? <><Check size={17}/> 日程を連絡済み</> : <><Heart size={17}/> 興味あり</>}</Button>
+            <div className={`offer-buttons ${o.selected_date ? "scheduled" : ""}`}>
+              {!o.selected_date && <Button kind={o.status === "rejected" ? "secondary" : "ghost"} onClick={() => react(o, "rejected")} disabled={responding}>{o.status === "rejected" ? <><Check size={17}/> 見送り選択中</> : "今回は見送る"}</Button>}
+              <Button onClick={() => { setScheduleOffer(o); setScheduleAction((o.next_action as "consultation_only" | "trial_shift") || ""); setScheduleDate(o.selected_date || ""); setScheduleEditing(!o.selected_date); }} disabled={responding}>{o.selected_date ? <><Check size={17}/> 確定内容を確認</> : <><Heart size={17}/> 興味あり</>}</Button>
             </div>
           </article>;
           })}
           {!offersLoading && !offersError && !visibleOffers.length && <div className="empty-state compact"><Mail/><h2>該当するオファーはありません</h2></div>}
         </div>
       </section>
-      {scheduleOffer && !cancelOpen && <div className="modal-backdrop"><div className="schedule-modal"><button className="modal-x" onClick={() => setScheduleOffer(null)}><X /></button><span className="eyebrow">SCHEDULE</span><h2>{scheduleOffer.selected_date ? "現在確定している日程" : "ご希望の進め方"}</h2>{scheduleOffer.selected_date && <div className="current-schedule"><b>{scheduleOffer.next_action === "trial_shift" ? "体験する" : "話を聞くだけ"}</b><strong>{formatDate(scheduleOffer.selected_date)}</strong>{scheduleOffer.next_action === "trial_shift" && <small>体験時給 ¥{formatYen(scheduleOffer.wage)}</small>}</div>}<p>{scheduleOffer.selected_date ? "ご変更の場合は、内容と日程を選び直してください。" : "まず希望する内容を選択してください。次に日程を確定します。"}</p><div className="schedule-choice-grid"><button className={scheduleAction === "consultation_only" ? "active" : ""} onClick={() => setScheduleAction("consultation_only")}>話を聞くだけ</button><button className={scheduleAction === "trial_shift" ? "active" : ""} onClick={() => setScheduleAction("trial_shift")}>体験する<br/><small>体験時給 ¥{formatYen(scheduleOffer.wage)}</small></button></div>{scheduleAction && <><h3>面接・体入希望日</h3><p>20時以降（日曜日を除く）で可能な日程を選んでください。</p><input type="date" value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} /></>}<div className="result-actions"><Button kind="secondary" onClick={() => setScheduleOffer(null)}>戻る</Button><Button disabled={!scheduleAction || !scheduleDate || responding} onClick={() => scheduleAction && react(scheduleOffer, "interested", scheduleDate, scheduleAction)}>{responding ? "送信中..." : "日程を確定"}</Button></div>{scheduleOffer.selected_date && <button className="cancel-schedule-link" onClick={() => setCancelOpen(true)}>キャンセルの場合</button>}</div></div>}
+      {scheduleOffer && !cancelOpen && <div className="modal-backdrop"><div className="schedule-modal"><button className="modal-x" onClick={() => setScheduleOffer(null)}><X /></button><span className="eyebrow">SCHEDULE</span><h2>{scheduleOffer.selected_date && !scheduleEditing ? "現在確定している日程" : scheduleOffer.selected_date ? "日程・内容を変更" : "ご希望の進め方"}</h2>{scheduleOffer.selected_date && !scheduleEditing && <div className="current-schedule"><b>{scheduleOffer.next_action === "trial_shift" ? "体験する" : "面接する"}</b><strong>{formatDate(scheduleOffer.selected_date)}</strong>{scheduleOffer.next_action === "trial_shift" && <small>体験時給 ¥{formatYen(scheduleOffer.wage)}</small>}</div>}{scheduleOffer.selected_date && !scheduleEditing && <><Button kind="secondary" onClick={() => setScheduleEditing(true)}>日程・内容を変更する</Button><button className="cancel-schedule-link" onClick={() => setCancelOpen(true)}>日程をキャンセルする</button></>}{(!scheduleOffer.selected_date || scheduleEditing) && <><p>{scheduleOffer.selected_date ? "変更する内容と日程を選択してください。" : "まず希望する内容を選択してください。次に日程を確定します。"}</p><div className="schedule-choice-grid"><button className={scheduleAction === "consultation_only" ? "active" : ""} onClick={() => setScheduleAction("consultation_only")}>面接する</button><button className={scheduleAction === "trial_shift" ? "active" : ""} onClick={() => setScheduleAction("trial_shift")}>体験する<br/><small>体験時給 ¥{formatYen(scheduleOffer.wage)}</small></button></div>{scheduleAction && <><h3>面接・体入希望日</h3><p>20時以降（日曜日を除く）で可能な日程を選んでください。</p><input className="schedule-date-input" type="date" value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} /></>}<div className="result-actions"><Button kind="secondary" onClick={() => scheduleOffer.selected_date ? setScheduleEditing(false) : setScheduleOffer(null)}>戻る</Button><Button disabled={!scheduleAction || !scheduleDate || responding} onClick={() => scheduleAction && react(scheduleOffer, "interested", scheduleDate, scheduleAction)}>{responding ? "送信中..." : scheduleOffer.selected_date ? "変更を確定" : "日程を確定"}</Button></div>{scheduleOffer.selected_date && <button className="cancel-schedule-link" onClick={() => setCancelOpen(true)}>日程をキャンセルする</button>}</>}</div></div>}
       {scheduleOffer && cancelOpen && <div className="modal-backdrop"><div className="schedule-modal cancel-modal"><button className="modal-x" onClick={() => setCancelOpen(false)}><X /></button><span className="eyebrow">CANCEL</span><h2>日程をキャンセル</h2><p>お店にお伝えするご事情をご記載ください。</p><textarea value={cancelReason} onChange={event => setCancelReason(event.target.value)} rows={5} placeholder="事情をご記載ください"/><div className="result-actions"><Button kind="secondary" onClick={() => setCancelOpen(false)}>戻る</Button><Button disabled={!cancelReason.trim() || responding} onClick={() => react(scheduleOffer, "interested", undefined, undefined, true)}>{responding ? "連絡中..." : "確定"}</Button></div></div></div>}
       <BottomNav role="seeker" screen="offers" go={go} badges={{ offers: newOfferCount }} />
     </main>
