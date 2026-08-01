@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { requireSignedIn } from "@/lib/authz";
 
 export const dynamic = "force-dynamic";
 
@@ -34,9 +35,12 @@ async function fetchOfferResponses(
 export async function GET(request: NextRequest) {
   // Prefer the authenticated session. LINE's in-app browser can occasionally
   // restore the page before client-side cookies/localStorage are fully ready.
-  const lineUserId = text(request.cookies.get("maxvalue_line_user_id")?.value) ||
-    text(request.nextUrl.searchParams.get("lineUserId"));
-  const supabase = getSupabaseServer();
+  const access = await requireSignedIn(request);
+  if (access.error) return access.error;
+  const lineUserId = access.lineUserId;
+  const requestedLineUserId = text(request.nextUrl.searchParams.get("lineUserId"));
+  if (requestedLineUserId && requestedLineUserId !== lineUserId) return NextResponse.json({ error: "ログイン情報が一致しません" }, { status: 403 });
+  const supabase = access.supabase || getSupabaseServer();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
   if (!lineUserId) return NextResponse.json({ error: "lineUserId is required" }, { status: 400 });
   const { data: users, error: userError } = await supabase
