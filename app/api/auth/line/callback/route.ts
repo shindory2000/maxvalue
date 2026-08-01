@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exchangeLineCode, fetchLineBotProfile, fetchLineProfile, verifyLineOAuthState } from "@/lib/line";
+import { exchangeLineCode, fetchLineProfile, verifyLineOAuthState } from "@/lib/line";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { ADMIN_SESSION_COOKIE, ADMIN_SESSION_MAX_AGE, createAdminSessionToken } from "@/lib/admin";
 
@@ -233,8 +233,7 @@ export async function GET(request: NextRequest) {
           if (seekerTarget.completed) {
             redirectScreen = "profile";
           } else {
-            const botProfile = await fetchLineBotProfile(profile.userId).catch(() => ({ userId: "", displayName: "", pictureUrl: "" }));
-            redirectScreen = botProfile.userId || botProfile.displayName ? "setup" : "friendAdd";
+            redirectScreen = "setup";
           }
           console.log("[line-callback] requested seeker redirect resolved", {
             userId: savedUser.id,
@@ -255,8 +254,7 @@ export async function GET(request: NextRequest) {
           if (seekerTarget.completed) {
             redirectScreen = "profile";
           } else {
-            const botProfile = await fetchLineBotProfile(profile.userId).catch(() => ({ userId: "", displayName: "", pictureUrl: "" }));
-            redirectScreen = botProfile.userId || botProfile.displayName ? "setup" : "friendAdd";
+            redirectScreen = "setup";
           }
           console.log("[line-callback] seeker redirect resolved", {
             userId: savedUser.id,
