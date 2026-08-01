@@ -33,7 +33,10 @@ export async function GET(request: NextRequest) {
     redirectUri,
     issuedAt: Date.now(),
   });
-  const response = NextResponse.redirect(buildLineAuthorizeUrl(state, redirectUri));
+  const isNewSeekerRegistration = role === "seeker" && returnTo.includes("screen=setup");
+  const response = NextResponse.redirect(buildLineAuthorizeUrl(state, redirectUri, {
+    promptFriendAdd: isNewSeekerRegistration,
+  }));
   response.cookies.set("line_oauth_state", state, {
     httpOnly: true,
     sameSite: "lax",
