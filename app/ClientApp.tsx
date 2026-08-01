@@ -54,6 +54,8 @@ const regionAreas = {
 
 type Region = keyof typeof regionAreas;
 const talentHues = ["rose", "sand", "night", "lilac", "blue", "peach"];
+const LIFF_ID = process.env.NEXT_PUBLIC_LIFF_ID || "2008292191-bPudzQV9";
+const LIFF_REGISTER_URL = `https://liff.line.me/${LIFF_ID}/`;
 type AdminAccountRole = "seeker" | "club_staff" | "ambassador" | "admin";
 
 type AdminViewMode = "admin" | "club" | "seeker" | "ambassador";
@@ -441,10 +443,88 @@ function RegionAreaPicker({ label, region, area, onRegion, onArea, error, id }: 
 type LineLoginRole = "seeker" | "club_staff" | "admin";
 
 function lineLoginHref(screen: Screen, role: LineLoginRole = "seeker", clubCode = "", referralCode = "") {
+  if (screen === "setup" && role === "seeker") {
+    const liffParams = new URLSearchParams({ flow: "register" });
+    if (referralCode.trim()) liffParams.set("ref", referralCode.trim());
+    return `${LIFF_REGISTER_URL}?${liffParams.toString()}`;
+  }
   const params = new URLSearchParams({ returnTo: `/?screen=${screen}`, role });
   if (clubCode.trim()) params.set("clubCode", clubCode.trim());
   if (referralCode.trim()) params.set("ref", referralCode.trim());
   return `/api/auth/line/start?${params.toString()}`;
+}
+
+type MaxValueLiff = {
+  init: (config: { liffId: string }) => Promise<void>;
+  isLoggedIn: () => boolean;
+  login: (config?: { redirectUri?: string }) => void;
+  getFriendship: () => Promise<{ friendFlag: boolean }>;
+  requestFriendship: () => Promise<void>;
+};
+
+function liffRegistrationParams() {
+  if (typeof window === "undefined") return null;
+  const direct = new URLSearchParams(window.location.search);
+  if (direct.get("flow") === "register") return direct;
+  const liffState = direct.get("liff.state");
+  if (!liffState) return null;
+  try {
+    const stateUrl = new URL(liffState, window.location.origin);
+    return stateUrl.searchParams.get("flow") === "register" ? stateUrl.searchParams : null;
+  } catch {
+    return null;
+  }
+}
+
+function loadLiffSdk() {
+  return new Promise<MaxValueLiff>((resolve, reject) => {
+    const current = (window as Window & { liff?: MaxValueLiff }).liff;
+    if (current) return resolve(current);
+    const existing = document.querySelector<HTMLScriptElement>('script[data-maxvalue-liff="true"]');
+    const script = existing || document.createElement("script");
+    const finish = () => {
+      const sdk = (window as Window & { liff?: MaxValueLiff }).liff;
+      if (sdk) resolve(sdk);
+      else reject(new Error("LINE連携を読み込めませんでした"));
+    };
+    script.addEventListener("load", finish, { once: true });
+    script.addEventListener("error", () => reject(new Error("LINE連携を読み込めませんでした")), { once: true });
+    if (!existing) {
+      script.src = "https://static.line-scdn.net/liff/edge/2/sdk.js";
+      script.dataset.maxvalueLiff = "true";
+      document.head.appendChild(script);
+    }
+  });
+}
+
+function LiffRegistrationBridge() {
+  const [error, setError] = useState("");
+  useEffect(() => {
+    const params = liffRegistrationParams();
+    if (!params) return;
+    const continueRegistration = async () => {
+      try {
+        const liff = await loadLiffSdk();
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) {
+          liff.login({ redirectUri: window.location.href });
+          return;
+        }
+        const friendship = await liff.getFriendship();
+        if (!friendship.friendFlag) await liff.requestFriendship();
+        const confirmed = await liff.getFriendship();
+        if (!confirmed.friendFlag) throw new Error("公式LINEの友だち追加を完了してください");
+        const authParams = new URLSearchParams({ returnTo: "/?screen=setup", role: "seeker" });
+        const referralCode = params.get("ref") || "";
+        if (referralCode) authParams.set("ref", referralCode);
+        window.location.replace(`/api/auth/line/start?${authParams.toString()}`);
+      } catch (reason) {
+        setError(reason instanceof Error ? reason.message : "LINE友だち追加を開始できませんでした");
+      }
+    };
+    void continueRegistration();
+  }, []);
+  return <main className="auth-page"><section className="auth-card"><Logo/><div className="auth-title"><span>LINE CONNECT</span><h1>{error ? "友だち追加を完了できませんでした" : "LINEを開いています"}</h1><p>{error || "公式LINEの友だち追加後、自動で登録画面へ戻ります。"}</p></div>{error && <Button onClick={() => window.location.reload()}>もう一度試す</Button>}{!error && <LoaderCircle className="spin"/>}</section></main>;
 }
 
 function LineLoginButton({ children = "LINEでログイン", screen = "setup", role = "seeker", className = "" }: { children?: ReactNode; screen?: Screen; role?: LineLoginRole; className?: string }) {
@@ -2475,6 +2555,7 @@ function SalesSection({ title, icon, children }: { title: string; icon: ReactNod
 }
 
 function AppRouter() {
+  const isLiffRegistration = useMemo(() => Boolean(liffRegistrationParams()), []);
   const [screen, setScreen] = useState<Screen>("landing");
   const [isAdmin, setIsAdmin] = useState(false);
   const [authResolved, setAuthResolved] = useState(false);
@@ -2568,6 +2649,8 @@ function AppRouter() {
     window.history.replaceState(null, "", url);
     setScreen("talent");
   };
+
+  if (isLiffRegistration) return <LiffRegistrationBridge/>;
 
   let content: ReactNode;
   if (screen === "landing") content = <Landing go={go}/>;
