@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { extractBubbleLineUserId } from "@/lib/bubble-line";
 import { buildOfferFlexMessage, sendLinePushMessage } from "@/lib/line";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { requireClubAccess } from "@/lib/authz";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,10 @@ export async function POST(request: NextRequest) {
   const guaranteePeriod = String(body.guaranteePeriod || "").trim();
   const comment = String(body.comment || "").trim();
   const options = Array.isArray(body.options) ? body.options.map((value: unknown) => String(value)).filter(Boolean) : [];
+
+  const access = await requireClubAccess(request, resolvedClubId);
+  if (access.error) return access.error;
+  resolvedClubId = access.clubId;
 
   if (!seekerId) return NextResponse.json({ ok: false, error: "seekerId is required" }, { status: 400 });
   if (!Number.isFinite(hourlyWage) || hourlyWage <= 0) return NextResponse.json({ ok: false, error: "想定時給を入力してください" }, { status: 400 });
