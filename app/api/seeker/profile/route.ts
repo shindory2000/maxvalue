@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
       const referral = await applyReferral(supabase, user as Record<string, unknown>, asString(body.referralCode));
       await sendLinePushMessage(asString(body.lineUserId), [buildAdminMessageFlexMessage({
         title: "ご登録ありがとうございます",
-        message: `ユーザー様の審査ランクにより、オファー・提供サービスが異なりますので、プロフィールは随時更新ください。写真や売上に変化があった際は、プロフィールの更新をお願いいたします。${referral.rank ? `\n招待ランク ${referral.rank} を仮設定しました。` : ""}`,
+        message: "ご登録情報によって、届くオファーやご案内できるサービスが異なります。写真や勤務状況などに変化があった際は、プロフィールを随時更新してください。",
       })]).catch(error => console.warn("[seeker-profile] welcome LINE skipped", error instanceof Error ? error.message : error));
     }
 
@@ -258,9 +258,11 @@ export async function GET(request: NextRequest) {
   const authenticatedLineUserId = request.cookies.get("maxvalue_line_user_id")?.value || "";
   if (!authenticatedLineUserId) return NextResponse.json({ error: "LINEログインが必要です" }, { status: 401 });
   if (lineUserId !== authenticatedLineUserId) return NextResponse.json({ error: "ログイン情報が一致しません" }, { status: 403 });
-  const { data: user } = await supabase.from("users").select("id").eq("line_user_id", lineUserId).maybeSingle();
+  const { data: userRows } = await supabase.from("users").select("id").eq("line_user_id", lineUserId).order("created_at", { ascending: false }).limit(1);
+  const user = Array.isArray(userRows) ? userRows[0] : null;
   if (!user?.id) return NextResponse.json({ error: "profile not found" }, { status: 404 });
-  const { data: profile, error } = await supabase.from("seeker_profiles").select("*").eq("user_id", user.id).maybeSingle();
+  const { data: profileRows, error } = await supabase.from("seeker_profiles").select("*").eq("user_id", user.id).limit(1);
+  const profile = Array.isArray(profileRows) ? profileRows[0] : null;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!profile) return NextResponse.json({ error: "profile not found" }, { status: 404 });
   const raw = (profile.bubble_raw || {}) as Record<string, unknown>;
