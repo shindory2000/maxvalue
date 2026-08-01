@@ -96,7 +96,11 @@ export function isLineLoginConfigured() {
   return Boolean(config.channelId && config.channelSecret && config.redirectUri);
 }
 
-export function buildLineAuthorizeUrl(state: string, redirectUri = getLineConfig().redirectUri) {
+export function buildLineAuthorizeUrl(
+  state: string,
+  redirectUri = getLineConfig().redirectUri,
+  options: { promptFriendAdd?: boolean } = {},
+) {
   const config = getLineConfig();
   const query = new URLSearchParams({
     response_type: "code",
@@ -105,6 +109,9 @@ export function buildLineAuthorizeUrl(state: string, redirectUri = getLineConfig
     state,
     scope: "profile openid",
   });
+  // Let LINE handle friend addition inside the OAuth flow. This keeps users
+  // in one continuous journey and returns them to our callback automatically.
+  if (options.promptFriendAdd) query.set("bot_prompt", "aggressive");
   return `${LINE_AUTHORIZE_URL}?${query}`;
 }
 
