@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendLinePushMessage } from "@/lib/line";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { requireSignedIn } from "@/lib/authz";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
-  const lineUserId = String(body.lineUserId || "");
+  const access = await requireSignedIn(request);
+  if (access.error) return access.error;
+  const lineUserId = access.lineUserId;
+  if (body.lineUserId && String(body.lineUserId) !== lineUserId) return NextResponse.json({ error: "ログイン情報が一致しません" }, { status: 403 });
   const itemName = String(body.itemName || "");
   const description = String(body.description || "");
-  const supabase = getSupabaseServer();
+  const supabase = access.supabase || getSupabaseServer();
 
   if (!itemName) return NextResponse.json({ error: "itemName is required" }, { status: 400 });
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
