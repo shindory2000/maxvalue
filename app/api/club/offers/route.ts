@@ -34,8 +34,12 @@ export async function GET(request: NextRequest) {
   const clubId = request.nextUrl.searchParams.get("clubId") || decodeCookie(request.cookies.get("maxvalue_club_id")?.value || "");
   if (!clubId) return NextResponse.json([]);
   try {
-    const { data: offers, error } = await supabase.from("offers").select("id,seeker_id,hourly_wage,guarantee_period,comment,status,bubble_raw,created_at,updated_at").eq("club_id", clubId).order("created_at", { ascending: false });
-    if (error) throw error;
+    const richOffers = await supabase.from("offers").select("id,seeker_id,hourly_wage,guarantee_period,comment,status,bubble_raw,created_at,updated_at").eq("club_id", clubId).order("created_at", { ascending: false });
+    const offersResult = richOffers.error && /bubble_raw|updated_at/i.test(richOffers.error.message)
+      ? await supabase.from("offers").select("id,seeker_id,hourly_wage,guarantee_period,comment,status,created_at").eq("club_id", clubId).order("created_at", { ascending: false })
+      : richOffers;
+    if (offersResult.error) throw offersResult.error;
+    const offers = offersResult.data;
     const rows = Array.isArray(offers) ? offers : [];
     const offerIds = rows.map(row => row.id);
     const seekerIds = rows.map(row => row.seeker_id).filter(Boolean);
@@ -47,10 +51,11 @@ export async function GET(request: NextRequest) {
     for (const response of responses) if (!responseMap.has(String(response.offer_id))) responseMap.set(String(response.offer_id), response as Record<string, unknown>);
     const seekerMap = new Map((Array.isArray(seekers) ? seekers : []).map(seeker => [seeker.id, seeker]));
     return NextResponse.json(rows.map(row => {
+      const offerRow = row as typeof row & { bubble_raw?: Record<string, unknown> | null };
       const response = responseMap.get(row.id) || {};
       const responsePayload = (response.line_payload || {}) as Record<string, unknown>;
       const seeker = seekerMap.get(row.seeker_id) || null;
-      const raw = (row.bubble_raw || {}) as Record<string, unknown>;
+      const raw = (offerRow.bubble_raw || {}) as Record<string, unknown>;
       const workflow = (raw.workflow || {}) as Record<string, unknown>;
       const responseStatus = String(response.response_status || responsePayload.response_status || "");
       const responseValue = String(response.status || response.response || responsePayload.status || responsePayload.response || responsePayload.response_type || "");
@@ -69,7 +74,7 @@ export async function GET(request: NextRequest) {
         options: Array.isArray(raw.options) ? raw.options : [],
       };
     }));
-  } catch (error) { return NextResponse.json({ error: "出したオファーを取得できませんでした", detail: error instanceof Error ? error.message : "unknown" }, { status: 500 }); }
+  } catch (error) { return NextResponse.json({ error: "出したオファーを取得できませんでした", detail: error instanceof Error ? error.message : String((error as { message?: unknown })?.message || "unknown") }, { status: 500 }); }
 }
 
 export async function PATCH(request: NextRequest) {
