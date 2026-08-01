@@ -243,9 +243,9 @@ export function buildOfferActionChoiceFlexMessage(input: OfferActionChoiceInput)
             color: "#24211e",
             action: {
               type: "postback",
-              label: "話を聞いてみる",
+              label: "面接を希望する",
               data: `offer_id=${input.offerId}&action=select_next_action&next_action=consultation_only`,
-              displayText: "話を聞いてみる",
+              displayText: "面接を希望する",
             },
           },
           {
@@ -266,6 +266,11 @@ export function buildOfferActionChoiceFlexMessage(input: OfferActionChoiceInput)
 }
 
 export function buildOfferDatePickerFlexMessage(input: OfferActionChoiceInput & { nextAction: string }) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://maxvalue-seven.vercel.app";
+  const scheduleUrl = new URL(appUrl);
+  scheduleUrl.searchParams.set("screen", "offers");
+  scheduleUrl.searchParams.set("scheduleOffer", input.offerId);
+  scheduleUrl.searchParams.set("nextAction", input.nextAction);
   return {
     type: "flex",
     altText: "希望日を選択してください",
@@ -279,8 +284,8 @@ export function buildOfferDatePickerFlexMessage(input: OfferActionChoiceInput & 
         backgroundColor: "#fbf7ef",
         contents: [
           { type: "text", text: "日程選択", size: "xs", weight: "bold", color: "#9a8870" },
-          { type: "text", text: "面接・体入が可能な日を選んでください", wrap: true, size: "xl", weight: "bold", color: "#171717", margin: "md" },
-          { type: "text", text: "20時以降（日曜日を除く）でご希望日をお送りください。", wrap: true, size: "sm", color: "#7c766f", margin: "md" },
+          { type: "text", text: "アプリで希望日を選んでください", wrap: true, size: "xl", weight: "bold", color: "#171717", margin: "md" },
+          { type: "text", text: "アプリと同じ日程調整画面が開きます。20時以降（日曜日を除く）でご希望日をお送りください。", wrap: true, size: "sm", color: "#7c766f", margin: "md" },
         ],
       },
       footer: {
@@ -294,10 +299,9 @@ export function buildOfferDatePickerFlexMessage(input: OfferActionChoiceInput & 
             style: "primary",
             color: "#85c7dc",
             action: {
-              type: "datetimepicker",
-              label: "希望日を選ぶ",
-              data: `offer_id=${input.offerId}&action=select_date&next_action=${input.nextAction}`,
-              mode: "date",
+              type: "uri",
+              label: "アプリで希望日を選ぶ",
+              uri: scheduleUrl.toString(),
             },
           },
         ],
@@ -338,7 +342,8 @@ export function buildAdminMessageFlexMessage(input: AdminMessageFlexInput) {
 
 export function verifyLineSignature(body: string, signature: string | null) {
   const secret = getLineConfig().webhookSecret;
-  if (!secret) return true;
+  // Fail closed: a webhook without a configured secret must never be trusted.
+  if (!secret) return false;
   if (!signature) return false;
   const expected = createHmac("sha256", secret).update(body).digest("base64");
   const actualBuffer = Buffer.from(signature);
