@@ -32,17 +32,34 @@ async function fetchOfferResponses(
 }
 
 export async function GET(request: NextRequest) {
-  const lineUserId = text(request.nextUrl.searchParams.get("lineUserId"));
+  // Prefer the authenticated session. LINE's in-app browser can occasionally
+  // restore the page before client-side cookies/localStorage are fully ready.
+  const lineUserId = text(request.cookies.get("maxvalue_line_user_id")?.value) ||
+    text(request.nextUrl.searchParams.get("lineUserId"));
   const supabase = getSupabaseServer();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
   if (!lineUserId) return NextResponse.json({ error: "lineUserId is required" }, { status: 400 });
-  const { data: user, error: userError } = await supabase.from("users").select("id,bubble_raw").eq("line_user_id", lineUserId).maybeSingle();
+  const { data: users, error: userError } = await supabase
+    .from("users")
+    .select("id,bubble_raw,created_at")
+    .eq("line_user_id", lineUserId)
+    .order("created_at", { ascending: false })
+    .limit(20);
   if (userError) return NextResponse.json({ error: userError.message }, { status: 500 });
-  const userRaw = (user?.bubble_raw || {}) as Record<string, unknown>;
-  const adminDeleted = (userRaw.admin_deleted || {}) as Record<string, unknown>;
-  if (!user?.id || userRaw.is_deleted || adminDeleted.is_deleted) return NextResponse.json([]);
-  const { data: profile, error: profileError } = await supabase.from("seeker_profiles").select("id").eq("user_id", user.id).maybeSingle();
+  const activeUsers = (users || []).filter(user => {
+    const raw = (user.bubble_raw || {}) as Record<string, unknown>;
+    const adminDeleted = (raw.admin_deleted || {}) as Record<string, unknown>;
+    return !raw.is_deleted && !adminDeleted.is_deleted;
+  });
+  if (!activeUsers.length) return NextResponse.json([]);
+  const { data: profiles, error: profileError } = await supabase
+    .from("seeker_profiles")
+    .select("id,user_id,updated_at")
+    .in("user_id", activeUsers.map(user => user.id))
+    .order("updated_at", { ascending: false });
   if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
+  const profilesByUser = new Map((profiles || []).map(profile => [profile.user_id, profile]));
+  const profile = activeUsers.map(user => profilesByUser.get(user.id)).find(Boolean);
   if (!profile?.id) return NextResponse.json([]);
   const { data: offers, error: offerError } = await supabase.from("offers").select("id,club_id,hourly_wage,guarantee_period,comment,status,created_at").eq("seeker_id", profile.id).order("created_at", { ascending: false });
   if (offerError) return NextResponse.json({ error: offerError.message }, { status: 500 });
