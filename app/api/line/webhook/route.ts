@@ -26,7 +26,7 @@ type OfferNextAction = "consultation_only" | "trial_shift";
 type OfferResponseStage = "interested_clicked" | "action_selected" | "schedule_selected" | "rejected";
 
 function nextActionLabel(value: string | null | undefined) {
-  return value === "trial_shift" ? "体験する" : "話を聞くだけ";
+  return value === "trial_shift" ? "体験する" : "面接";
 }
 
 function confirmationText(nextAction: string | null | undefined, selectedDate: string, offeredHourlyWage: number) {
