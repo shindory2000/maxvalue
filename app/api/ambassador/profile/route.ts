@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { requireSignedIn } from "@/lib/authz";
 
 export const dynamic = "force-dynamic";
 
 function text(value: unknown) { return typeof value === "string" ? value.trim() : ""; }
 
 export async function GET(request: NextRequest) {
-  const lineUserId = text(request.nextUrl.searchParams.get("lineUserId") || request.cookies.get("maxvalue_line_user_id")?.value);
-  const supabase = getSupabaseServer();
+  const access = await requireSignedIn(request);
+  if (access.error) return access.error;
+  const lineUserId = access.lineUserId;
+  const requested = text(request.nextUrl.searchParams.get("lineUserId"));
+  if (requested && requested !== lineUserId) return NextResponse.json({ error: "ログイン情報が一致しません" }, { status: 403 });
+  const supabase = access.supabase || getSupabaseServer();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
   const { data: user } = await supabase.from("users").select("id,line_name,line_picture_url,bubble_raw").eq("line_user_id", lineUserId).maybeSingle();
   if (!user?.id) return NextResponse.json({ error: "user not found" }, { status: 404 });
@@ -24,12 +29,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({})) as Record<string, unknown>;
-  const lineUserId = text(body.lineUserId || request.cookies.get("maxvalue_line_user_id")?.value);
+  const access = await requireSignedIn(request);
+  if (access.error) return access.error;
+  const lineUserId = access.lineUserId;
+  if (body.lineUserId && text(body.lineUserId) !== lineUserId) return NextResponse.json({ error: "ログイン情報が一致しません" }, { status: 403 });
   const name = text(body.name);
   const region = text(body.region);
   const photoUrl = text(body.photoUrl);
   if (!lineUserId || !name || !region || !photoUrl) return NextResponse.json({ error: "名前・地域・顔写真は必須です" }, { status: 400 });
-  const supabase = getSupabaseServer();
+  const supabase = access.supabase || getSupabaseServer();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
   const { data: user } = await supabase.from("users").select("id,bubble_raw").eq("line_user_id", lineUserId).maybeSingle();
   if (!user?.id) return NextResponse.json({ error: "user not found" }, { status: 404 });
