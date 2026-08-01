@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { requireClubAccess } from "@/lib/authz";
 
 export const dynamic = "force-dynamic";
 
@@ -29,9 +30,12 @@ async function fetchOfferResponses(
 }
 
 export async function GET(request: NextRequest) {
-  const supabase = getSupabaseServer();
+  const requestedClubId = request.nextUrl.searchParams.get("clubId") || decodeCookie(request.cookies.get("maxvalue_club_id")?.value || "");
+  const access = await requireClubAccess(request, requestedClubId);
+  if (access.error) return access.error;
+  const supabase = access.supabase || getSupabaseServer();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
-  const clubId = request.nextUrl.searchParams.get("clubId") || decodeCookie(request.cookies.get("maxvalue_club_id")?.value || "");
+  const clubId = access.clubId;
   if (!clubId) return NextResponse.json([]);
   try {
     const richOffers = await supabase.from("offers").select("id,seeker_id,hourly_wage,guarantee_period,comment,status,bubble_raw,created_at,updated_at").eq("club_id", clubId).order("created_at", { ascending: false });
@@ -78,14 +82,17 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const supabase = getSupabaseServer();
+  const access = await requireClubAccess(request, decodeCookie(request.cookies.get("maxvalue_club_id")?.value || ""));
+  if (access.error) return access.error;
+  const supabase = access.supabase || getSupabaseServer();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
   const body = await request.json().catch(() => ({})) as Record<string, unknown>;
   const offerId = String(body.offerId || "");
   if (!offerId) return NextResponse.json({ error: "offerId is required" }, { status: 400 });
   try {
-    const { data: offer, error } = await supabase.from("offers").select("bubble_raw").eq("id", offerId).single();
+    const { data: offer, error } = await supabase.from("offers").select("bubble_raw,club_id").eq("id", offerId).single();
     if (error) throw error;
+    if (String(offer?.club_id || "") !== access.clubId) return NextResponse.json({ error: "他店舗のオファーは操作できません" }, { status: 403 });
     const raw = (offer?.bubble_raw || {}) as Record<string, unknown>;
     const workflow = { ...((raw.workflow || {}) as Record<string, unknown>), status: String(body.workflowStatus || "interviewed"), outcome: body.outcome || null, store_action_required: false, updated_at: new Date().toISOString() };
     const { error: updateError } = await supabase.from("offers").update({ bubble_raw: { ...raw, workflow } }).eq("id", offerId);
