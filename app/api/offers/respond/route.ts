@@ -18,7 +18,7 @@ function asNextAction(value: unknown): OfferNextAction | null {
 }
 
 function nextActionLabel(value: OfferNextAction | null) {
-  return value === "trial_shift" ? "体験する" : "話を聞くだけ";
+  return value === "trial_shift" ? "体験する" : "面接";
 }
 
 function confirmationText(nextAction: OfferNextAction | null, selectedDate: string, offeredHourlyWage: number) {
@@ -55,19 +55,22 @@ export async function POST(request: NextRequest) {
   let targetLineUserId = lineUserId;
 
   if (lineUserId) {
-    const { data: user } = await supabase
+    const { data: userRows } = await supabase
       .from("users")
       .select("id,line_user_id")
       .eq("line_user_id", lineUserId)
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const user = Array.isArray(userRows) ? userRows[0] : null;
     userId = user?.id || "";
     targetLineUserId = user?.line_user_id || lineUserId;
     if (userId) {
-      const { data: profile } = await supabase
+      const { data: profileRows } = await supabase
         .from("seeker_profiles")
         .select("id")
         .eq("user_id", userId)
-        .maybeSingle();
+        .limit(1);
+      const profile = Array.isArray(profileRows) ? profileRows[0] : null;
       seekerId = profile?.id || "";
     }
   }
