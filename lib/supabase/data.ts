@@ -66,6 +66,10 @@ export function getActiveLinePictureUrl() {
   return readCookie("maxvalue_line_picture_url");
 }
 
+export function getActiveLineDisplayName() {
+  return readCookie("maxvalue_line_display_name") || readCookie("maxvalue_line_name");
+}
+
 export function getReferralCode() {
   return readCookie("maxvalue_referral_code");
 }
