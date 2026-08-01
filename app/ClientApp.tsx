@@ -54,7 +54,6 @@ const regionAreas = {
 
 type Region = keyof typeof regionAreas;
 const talentHues = ["rose", "sand", "night", "lilac", "blue", "peach"];
-const LINE_FRIEND_URL = process.env.NEXT_PUBLIC_LINE_FRIEND_URL || "https://lin.ee/QoHrKN8";
 type AdminAccountRole = "seeker" | "club_staff" | "ambassador" | "admin";
 
 type AdminViewMode = "admin" | "club" | "seeker" | "ambassador";
@@ -685,29 +684,6 @@ function Signin({ go, club = false }: { go: (s: Screen) => void; club?: boolean 
       </section>
     </main>
   );
-}
-
-function FriendAdd({ go }: { go: (s: Screen) => void }) {
-  const [checking, setChecking] = useState(false);
-  const [message, setMessage] = useState("");
-  const checkFriend = async () => {
-    setChecking(true);
-    setMessage("");
-    try {
-      const response = await fetch("/api/auth/line/friend-status", { cache: "no-store" });
-      const result = await response.json().catch(() => ({}));
-      if (response.ok && result.friendAdded) {
-        go("setup");
-        return;
-      }
-      setMessage("友だち追加を確認できませんでした。追加後にもう一度確認してください。");
-    } catch {
-      setMessage("確認に失敗しました。通信状況を確認してもう一度お試しください。");
-    } finally {
-      setChecking(false);
-    }
-  };
-  return <main className="auth-page"><button className="auth-back" onClick={() => go("signin")}><ArrowLeft /> 戻る</button><section className="auth-card friend-gate"><Logo/><div className="auth-title"><span>LINE FRIEND</span><h1>公式LINEを友だち追加</h1><p>オファー通知を受け取るため、登録前に公式LINEを友だち追加してください。</p></div>{LINE_FRIEND_URL ? <a className="line-login-link" href={LINE_FRIEND_URL} target="_blank" rel="noreferrer"><MessageCircle size={20}/> LINEで友だち追加</a> : <p className="form-error">友だち追加URLが未設定です。</p>}<Button disabled={checking} onClick={checkFriend}>{checking ? "確認中..." : "友だち追加完了を確認"}</Button>{message && <p className="form-error">{message}</p>}</section></main>;
 }
 
 function Setup({ go, club = false }: { go: (s: Screen) => void; club?: boolean }) {
@@ -2594,7 +2570,8 @@ function AppRouter() {
   let content: ReactNode;
   if (screen === "landing") content = <Landing go={go}/>;
   else if (screen === "signin") content = <Signin go={go}/>;
-  else if (screen === "friendAdd") content = <FriendAdd go={go}/>;
+  // Backward compatibility for old URLs/bookmarks: skip the removed gate.
+  else if (screen === "friendAdd") content = <Setup go={go}/>;
   else if (screen === "instagramGate") content = <InstagramGate go={go}/>;
   else if (screen === "clubSignin") content = <Signin go={go} club/>;
   else if (screen === "adminSignin") content = <AdminSignin go={go}/>;
