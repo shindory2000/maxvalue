@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractBubbleLineUserId } from "@/lib/bubble-line";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { requireClubAccess } from "@/lib/authz";
 
 export const dynamic = "force-dynamic";
 
@@ -25,9 +26,11 @@ function isDeletedUser(user: LooseRow | undefined) {
 }
 
 export async function GET(request: NextRequest) {
-  const supabase = getSupabaseServer();
+  const access = await requireClubAccess(request, request.nextUrl.searchParams.get("clubId") || "");
+  if (access.error) return access.error;
+  const supabase = access.supabase || getSupabaseServer();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
-  const selectedClubId = request.nextUrl.searchParams.get("clubId") || "";
+  const selectedClubId = access.clubId;
 
   const [
     { data: profiles, error: profileError },
