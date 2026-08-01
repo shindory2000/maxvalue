@@ -20,8 +20,36 @@ function rankMultiplier(rank: string, rarity: string) {
   return 1;
 }
 
-function pickItem<T extends { probability?: number | null; rarity?: string | null }>(items: T[], rank: string) {
-  const weight = (item: T) => Number(item.probability || 0) * rankMultiplier(rank, String(item.rarity || ""));
+function prizeKind(item: { name?: string | null }) {
+  const name = String(item.name || "").toUpperCase();
+  if (name.includes("SOUMEI BLUE")) return "blue";
+  if (name.includes("SOUMEI")) return "soumei";
+  return "standard";
+}
+
+function baseProbability(item: { name?: string | null; probability?: number | null }, ticketType: TicketType) {
+  const kind = prizeKind(item);
+  if (kind === "blue") return 0;
+  if (kind === "soumei") return 0.01;
+  const name = String(item.name || "");
+  if (name.includes("コーラ")) return ticketType === "interview" ? 0.79 : 0.39;
+  return Number(item.probability || 0);
+}
+
+function actualProbability<T extends { name?: string | null; probability?: number | null; rarity?: string | null }>(item: T, items: T[], rank: string, ticketType: TicketType) {
+  const kind = prizeKind(item);
+  if (kind === "blue") return 0;
+  if (kind === "soumei") return 0.01;
+  const standardTotal = items.reduce((sum, current) => {
+    if (prizeKind(current) !== "standard") return sum;
+    return sum + baseProbability(current, ticketType) * rankMultiplier(rank, String(current.rarity || ""));
+  }, 0);
+  if (!standardTotal) return 0;
+  return (baseProbability(item, ticketType) * rankMultiplier(rank, String(item.rarity || "")) / standardTotal) * 0.99;
+}
+
+function pickItem<T extends { name?: string | null; probability?: number | null; rarity?: string | null }>(items: T[], rank: string, ticketType: TicketType) {
+  const weight = (item: T) => actualProbability(item, items, rank, ticketType);
   const total = items.reduce((sum, item) => sum + weight(item), 0);
   const roll = Math.random() * (total > 0 ? total : 1);
   let threshold = 0;
@@ -78,7 +106,8 @@ export async function POST(request: NextRequest) {
       .eq("is_active", true)
       .order("probability", { ascending: false });
     if (itemError) throw new Error(`gacha item lookup failed: ${itemError.message}`);
-    const item = pickItem(Array.isArray(items) ? items : [], rank);
+    const pool = Array.isArray(items) ? items : [];
+    const item = pickItem(pool, rank, ticketType);
     if (!item?.id) return NextResponse.json({ error: "ガチャ景品が設定されていません" }, { status: 400 });
 
     const now = new Date().toISOString();
@@ -109,7 +138,7 @@ export async function POST(request: NextRequest) {
       rarity: item.rarity,
       description: item.description,
       image_url: item.image_url,
-      probability: Number(item.probability || 0),
+      probability: actualProbability(item, pool, rank, ticketType),
       ticket_type: item.ticket_type,
       rank,
     });
