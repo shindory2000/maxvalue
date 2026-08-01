@@ -1036,6 +1036,7 @@ function Setup({ go, club = false }: { go: (s: Screen) => void; club?: boolean }
 function Offers({ go }: { go: (s: Screen) => void }) {
   const [offers, setOffers] = useState<OfferRecord[]>([]);
   const [offersLoading, setOffersLoading] = useState(true);
+  const [offersError, setOffersError] = useState("");
   const [scheduleOffer, setScheduleOffer] = useState<OfferRecord | null>(null);
   const [scheduleAction, setScheduleAction] = useState<"consultation_only" | "trial_shift" | "">("");
   const [scheduleDate, setScheduleDate] = useState("");
@@ -1050,6 +1051,7 @@ function Offers({ go }: { go: (s: Screen) => void }) {
     loadingOffersRef.current = true;
     const lineUserId = getActiveLineUserId();
     try {
+      setOffersError("");
       await bootstrapTemporaryUser(lineUserId);
       const items = await fetchOffers(lineUserId);
       const nextOffers = safeArray(items);
@@ -1057,8 +1059,9 @@ function Offers({ go }: { go: (s: Screen) => void }) {
       try {
         window.sessionStorage.setItem(`maxvalue_offers_${lineUserId}`, JSON.stringify(nextOffers));
       } catch {}
-    } catch {
+    } catch (error) {
       // Keep the last successfully displayed result during a temporary network error.
+      setOffersError(error instanceof Error ? error.message : "オファーを取得できませんでした");
     } finally {
       setOffersLoading(false);
       loadingOffersRef.current = false;
@@ -1140,6 +1143,7 @@ function Offers({ go }: { go: (s: Screen) => void }) {
       <section className="page-content">
         <div className="dashboard-hello"><div><span>MAXVALUE</span><h1>あなたへのオファー</h1></div></div>
         {offerMessage && <div className="inline-notice">{offerMessage}</div>}
+        {offersError && <div className="inline-notice"><span>{offersError}</span><button type="button" onClick={() => void loadOffers()}>再読み込み</button></div>}
         <div className="filter-row"><button className={offerFilter === "all" ? "active" : ""} onClick={() => setOfferFilter("all")}>すべて</button><button className={offerFilter === "interested" ? "active" : ""} onClick={() => setOfferFilter("interested")}>興味あり</button><button className={offerFilter === "rejected" ? "active" : ""} onClick={() => setOfferFilter("rejected")}>見送り</button></div>
         <div className="offer-list">
           {offersLoading && Array.from({ length: 2 }, (_, index) => <div className="offer-card offer-skeleton" key={index} aria-label="オファーを読み込み中"><i/><i/><i/><i/></div>)}
@@ -1157,7 +1161,7 @@ function Offers({ go }: { go: (s: Screen) => void }) {
             </div>
           </article>;
           })}
-          {!offersLoading && !visibleOffers.length && <div className="empty-state compact"><Mail/><h2>該当するオファーはありません</h2></div>}
+          {!offersLoading && !offersError && !visibleOffers.length && <div className="empty-state compact"><Mail/><h2>該当するオファーはありません</h2></div>}
         </div>
       </section>
       {scheduleOffer && !cancelOpen && <div className="modal-backdrop"><div className="schedule-modal"><button className="modal-x" onClick={() => setScheduleOffer(null)}><X /></button><span className="eyebrow">SCHEDULE</span><h2>{scheduleOffer.selected_date ? "現在確定している日程" : "ご希望の進め方"}</h2>{scheduleOffer.selected_date && <div className="current-schedule"><b>{scheduleOffer.next_action === "trial_shift" ? "体験する" : "話を聞くだけ"}</b><strong>{formatDate(scheduleOffer.selected_date)}</strong>{scheduleOffer.next_action === "trial_shift" && <small>体験時給 ¥{formatYen(scheduleOffer.wage)}</small>}</div>}<p>{scheduleOffer.selected_date ? "ご変更の場合は、内容と日程を選び直してください。" : "まず希望する内容を選択してください。次に日程を確定します。"}</p><div className="schedule-choice-grid"><button className={scheduleAction === "consultation_only" ? "active" : ""} onClick={() => setScheduleAction("consultation_only")}>話を聞くだけ</button><button className={scheduleAction === "trial_shift" ? "active" : ""} onClick={() => setScheduleAction("trial_shift")}>体験する<br/><small>体験時給 ¥{formatYen(scheduleOffer.wage)}</small></button></div>{scheduleAction && <><h3>面接・体入希望日</h3><p>20時以降（日曜日を除く）で可能な日程を選んでください。</p><input type="date" value={scheduleDate} onChange={e => setScheduleDate(e.target.value)} /></>}<div className="result-actions"><Button kind="secondary" onClick={() => setScheduleOffer(null)}>戻る</Button><Button disabled={!scheduleAction || !scheduleDate || responding} onClick={() => scheduleAction && react(scheduleOffer, "interested", scheduleDate, scheduleAction)}>{responding ? "送信中..." : "日程を確定"}</Button></div>{scheduleOffer.selected_date && <button className="cancel-schedule-link" onClick={() => setCancelOpen(true)}>キャンセルの場合</button>}</div></div>}
