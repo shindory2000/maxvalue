@@ -111,7 +111,13 @@ export function buildLineAuthorizeUrl(
   });
   // Let LINE handle friend addition inside the OAuth flow. This keeps users
   // in one continuous journey and returns them to our callback automatically.
-  if (options.promptFriendAdd) query.set("bot_prompt", "aggressive");
+  if (options.promptFriendAdd) {
+    query.set("bot_prompt", "aggressive");
+    // LINE's automatic login can skip the interactive authorization journey
+    // for returning users. New registration must show the friend prompt even
+    // when this browser has authorized the channel before.
+    query.set("disable_auto_login", "true");
+  }
   return `${LINE_AUTHORIZE_URL}?${query}`;
 }
 
