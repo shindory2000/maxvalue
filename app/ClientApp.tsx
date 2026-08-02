@@ -632,95 +632,100 @@ function Landing({ go }: { go: (s: Screen) => void }) {
   } as const;
 
   return (
-    <main className="brand-site editorial-lp">
+    <main className="brand-site refined-lp">
       {loading && <motion.div className="brand-loader playful-loader" initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ delay: .55, duration: .3 }}><Logo light /><span>YOUR NEXT STAGE IS CALLING</span></motion.div>}
-      <nav className="brand-nav editorial-nav">
-        <a href="#top" className="editorial-logo"><Logo /></a>
-        <div className="editorial-nav-links">
-          <a href="#concept">CONCEPT</a>
-          <a href="#features">FEATURES</a>
-          <a href="#how">HOW TO</a>
+      <nav className="refined-nav">
+        <a href="#top" className="refined-logo"><Logo /></a>
+        <div className="refined-nav-links">
+          <a href="#features">選ばれる理由</a>
+          <a href="#how">ご利用の流れ</a>
+          <a href="#stories">ストーリー</a>
         </div>
-        <LineLoginButton screen="setup" className="editorial-nav-cta">LINEで無料登録 <ArrowRight size={16}/></LineLoginButton>
-        <button className="brand-menu-button editorial-menu-button" onClick={() => setMenuOpen(true)} aria-label="メニュー"><Menu size={24} /></button>
+        <LineLoginButton screen="setup" className="refined-nav-cta">LINEで無料登録 <ArrowRight size={16}/></LineLoginButton>
+        <button className="brand-menu-button refined-menu-button" onClick={() => setMenuOpen(true)} aria-label="メニュー"><Menu size={24} /></button>
       </nav>
 
-      <section id="top" className="editorial-hero">
-        <motion.img src={stories[0]?.image} alt={stories[0]?.alt || "MAXVALUE"} initial={{ scale: 1.08 }} animate={{ scale: 1 }} transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }} />
-        <div className="editorial-hero-wash" />
-        <div className="editorial-hero-copy">
-          <motion.span initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .35 }}>NIGHT WORK, REIMAGINED.</motion.span>
-          <motion.h1 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .45, duration: .8 }}>
-            選ばれる前に、<br/><em>選ぶ。</em>
+      <section id="top" className="refined-hero">
+        <div className="refined-hero-copy">
+          <motion.span initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>NIGHT CAREER PLATFORM</motion.span>
+          <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .1, duration: .65 }}>
+            条件を見て、<br/><em>あなたが選ぶ。</em>
           </motion.h1>
-          <motion.div className="editorial-hero-bottom" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .85 }}>
-            <p>あなたを探しているお店から、条件つきのオファーが届く。新しい夜の仕事選びを、もっと自由に。</p>
-            <LineLoginButton screen="setup" className="editorial-hero-cta">LINEで無料登録 <ArrowRight size={18}/></LineLoginButton>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .3 }}>
+            高級店から届くオファーを、LINEで確認。<br/>時給・保証期間を見て、会いたいお店だけ選べます。
+          </motion.p>
+          <motion.div className="refined-hero-actions" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .4 }}>
+            <LineLoginButton screen="setup" className="refined-primary-cta">LINEで無料登録 <ArrowRight size={18}/></LineLoginButton>
+            <small><Check size={15}/> 登録無料　<Check size={15}/> 本名不要　<Check size={15}/> 18歳以上</small>
           </motion.div>
         </div>
-        <div className="editorial-scroll">SCROLL TO EXPLORE <span>↓</span></div>
-      </section>
-
-      <div className="editorial-marquee" aria-hidden="true"><div>YOUR VALUE, YOUR CHOICE.　#PRIVATE OFFER　#NICKNAME ONLY　#YOUR NEXT STAGE　YOUR VALUE, YOUR CHOICE.　#PRIVATE OFFER　#NICKNAME ONLY　#YOUR NEXT STAGE　</div></div>
-
-      <section id="concept" className="editorial-concept">
-        <div className="editorial-section-label">01 — CONCEPT</div>
-        <FadeIn className="editorial-concept-copy">
-          <span>DON&apos;T CHASE.<br/>BE CHOSEN.</span>
-          <h2>探し回るから、<br/>届いた条件を選ぶへ。</h2>
-          <p>プロフィールを登録したら、あとは待つだけ。時給、保証期間、お店の雰囲気。大切な条件を先に見て、会いたいお店だけを自分で選べます。</p>
-        </FadeIn>
-        <div className="editorial-facts"><div><b>0円</b><span>登録・利用料</span></div><div><b>本名不要</b><span>ニックネームで登録</span></div><div><b>24H</b><span>いつでもオファー確認</span></div></div>
-      </section>
-
-      <section id="features" className="editorial-features">
-        <div className="editorial-section-label">02 — WHAT CHANGES</div>
-        <h2>主役は、<br/>いつだってあなた。</h2>
-        <div className="editorial-feature-list">
-          <FadeIn className="editorial-feature-row"><b>01</b><Mail/><h3>条件を見てから選ぶ</h3><p>時給・保証期間・コメントを確認して、気になるオファーにだけ返答。</p><ArrowRight/></FadeIn>
-          <FadeIn className="editorial-feature-row"><b>02</b><ShieldCheck/><h3>見られ方を自分で決める</h3><p>現在勤務店や見られたくないお店を設定し、プロフィールを安全に管理。</p><ArrowRight/></FadeIn>
-          <FadeIn className="editorial-feature-row"><b>03</b><Gift/><h3>次の一歩を楽しむ</h3><p>登録・招待・面接でチケットを獲得。限定リワードが当たるガチャへ。</p><ArrowRight/></FadeIn>
+        <div className="refined-hero-visual">
+          <motion.div className="refined-photo-frame" initial={{ opacity: 0, x: 35 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: .8 }}>
+            <img src={stories[0]?.image} alt={stories[0]?.alt || "MAXVALUE"}/>
+          </motion.div>
+          <motion.div className="refined-offer-preview" initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .45 }}>
+            <div><span>PRIVATE OFFER</span><b>新しいオファーが届きました</b></div>
+            <strong>¥20,000<small>/時</small></strong>
+            <p><ShieldCheck size={15}/> 条件を確認してから返答できます</p>
+          </motion.div>
+          <div className="refined-hero-stamp"><Sparkles/><b>登録で<br/>ガチャ1回</b></div>
         </div>
       </section>
 
-      <section className="editorial-stories">
-        <div className="editorial-stories-heading"><div className="editorial-section-label">03 — STORIES</div><h2>自分らしい夜を、<br/>自分で選んだ人たち。</h2></div>
-        <div className="editorial-story-grid">{stories.map((story, index) => <motion.figure key={story.image} whileHover={{ y: -8 }}><img src={story.image} alt={story.alt}/><figcaption><span>STORY 0{index + 1}</span><h3>{story.copy}</h3><b>{story.label}</b></figcaption></motion.figure>)}</div>
+      <div className="refined-proof"><span>登録・利用料</span><b>0円</b><i/><span>登録名</span><b>ニックネーム</b><i/><span>オファー確認</span><b>LINEで完結</b></div>
+
+      <section id="concept" className="refined-concept">
+        <FadeIn className="refined-section-heading"><span>OUR CONCEPT</span><h2>探す転職から、<br/>届くオファーを選ぶ転職へ。</h2><p>プロフィールを一度登録すれば、お店から条件付きのオファーが届きます。知らないお店を探し回ったり、条件が分からないまま面接へ行く必要はありません。</p></FadeIn>
       </section>
 
-      <section id="how" className="editorial-how">
-        <div className="editorial-section-label">04 — HOW TO START</div>
-        <div className="editorial-how-title"><span>ONLY THREE STEPS</span><h2>はじめ方は、<br/>驚くほどシンプル。</h2></div>
-        <ol className="editorial-steps">
+      <section id="features" className="refined-features">
+        <div className="refined-section-heading light"><span>WHY MAXVALUE</span><h2>自分の価値を、<br/>自分で選べる。</h2></div>
+        <div className="refined-feature-grid">
+          <FadeIn className="refined-feature-card"><i>01</i><Mail/><h3>条件が先に分かる</h3><p>時給・保証期間・お店からのコメントを見てから、返答できます。</p></FadeIn>
+          <FadeIn className="refined-feature-card"><i>02</i><ShieldCheck/><h3>公開先を選べる</h3><p>現在勤務店や見られたくないお店を設定。プロフィールの公開範囲を管理できます。</p></FadeIn>
+          <FadeIn className="refined-feature-card"><i>03</i><Gift/><h3>登録から楽しい</h3><p>登録・招待・面接でチケットを獲得。限定リワードが当たるガチャも。</p></FadeIn>
+        </div>
+      </section>
+
+      <section id="stories" className="refined-stories">
+        <div className="refined-section-heading"><span>REAL STORIES</span><h2>次のステージを、<br/>自分で決めた人たち。</h2></div>
+        <div className="refined-story-grid">{stories.map((story, index) => <motion.figure key={story.image} whileHover={{ y: -6 }}><img src={story.image} alt={story.alt}/><figcaption><span>0{index + 1}</span><div><b>{story.copy}</b><small>{story.label}</small></div><ArrowRight/></figcaption></motion.figure>)}</div>
+      </section>
+
+      <section id="how" className="refined-how">
+        <div className="refined-section-heading"><span>HOW TO START</span><h2>LINEから、<br/>3ステップでスタート。</h2></div>
+        <ol className="refined-steps">
           <li><b>01</b><div><strong>LINEで登録</strong><small>本名は不要。ニックネームと希望条件を入力</small></div></li>
           <li><b>02</b><div><strong>オファーを待つ</strong><small>あなたを探しているお店から条件が届く</small></div></li>
           <li><b>03</b><div><strong>気になるお店を選ぶ</strong><small>面接・体験へ進むかを自分で決める</small></div></li>
         </ol>
       </section>
 
-      <section className="editorial-final">
-        <span>READY FOR YOUR NEXT STAGE?</span>
-        <h2>次のステージは、<br/>もうあなたを探している。</h2>
-        <div><LineLoginButton screen="setup" className="editorial-final-cta">LINEで無料登録 <ArrowRight size={18}/></LineLoginButton><small>登録無料 / 本名不要 / 18歳以上</small></div>
+      <section className="refined-final">
+        <span>YOUR NEXT STAGE IS CALLING</span>
+        <h2>まだ知らない条件が、<br/>あなたを待っている。</h2>
+        <p>登録は無料。本名を入力せず、LINEから始められます。</p>
+        <LineLoginButton screen="setup" className="refined-final-cta">LINEで無料登録 <ArrowRight size={18}/></LineLoginButton>
       </section>
 
-      <footer className="brand-new-footer editorial-footer">
+      <footer className="brand-new-footer refined-footer">
         <Logo light />
         <div><button onClick={() => setModal("company")}>会社情報</button><button onClick={() => setModal("terms")}>利用規約</button><button onClick={() => setModal("privacy")}>プライバシー</button></div>
       </footer>
 
-      {menuOpen && <div className="brand-menu-panel editorial-menu-panel">
+      {menuOpen && <div className="brand-menu-panel refined-menu-panel">
         <button className="modal-x" onClick={() => setMenuOpen(false)}><X /></button>
         <Logo light />
-        <a href="#concept" onClick={() => setMenuOpen(false)}>CONCEPT</a>
-        <a href="#features" onClick={() => setMenuOpen(false)}>FEATURES</a>
-        <a href="#how" onClick={() => setMenuOpen(false)}>HOW TO</a>
+        <a href="#features" onClick={() => setMenuOpen(false)}>選ばれる理由</a>
+        <a href="#how" onClick={() => setMenuOpen(false)}>ご利用の流れ</a>
+        <a href="#stories" onClick={() => setMenuOpen(false)}>ストーリー</a>
         <button onClick={() => { setModal("company"); setMenuOpen(false); }}>会社情報</button>
         <button onClick={() => go("clubSignin")}>店舗の方</button>
         <a href="/api/auth/line/start?role=ambassador&returnTo=/?screen=ambassadorProfile">アンバサダー</a>
         <button onClick={() => go("adminSignin")}>管理者</button>
       </div>}
       {modal && <div className="modal-backdrop"><div className="brand-info-modal" role="dialog" aria-modal="true" aria-labelledby="brand-info-title"><button className="modal-x" aria-label="閉じる" onClick={() => setModal(null)}><X /></button><h2 id="brand-info-title">{modalCopy[modal].title}</h2>{modalCopy[modal].updatedAt && <small>最終更新：{modalCopy[modal].updatedAt}</small>}<div className="legal-sections">{modalCopy[modal].sections.map(section => <section key={section.heading}><h3>{section.heading}</h3><p>{section.body}</p></section>)}</div></div></div>}
+      <LineLoginButton screen="setup" className="refined-mobile-sticky">LINEで無料登録 <ArrowRight size={17}/></LineLoginButton>
     </main>
   );
 }
