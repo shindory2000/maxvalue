@@ -292,13 +292,13 @@ export async function GET(request: NextRequest) {
         path: "/",
       });
     }
-    response.cookies.set("maxvalue_line_name", encodeURIComponent(profile.displayName), {
+    response.cookies.set("maxvalue_line_name", profile.displayName, {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 180,
       path: "/",
     });
-    response.cookies.set("maxvalue_line_display_name", encodeURIComponent(profile.displayName), {
+    response.cookies.set("maxvalue_line_display_name", profile.displayName, {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 180,
@@ -337,7 +337,7 @@ export async function GET(request: NextRequest) {
         maxAge: 60 * 60 * 24 * 180,
         path: "/",
       });
-      response.cookies.set("maxvalue_club_name", encodeURIComponent(linkedClub.display_name), {
+      response.cookies.set("maxvalue_club_name", linkedClub.display_name, {
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
         maxAge: 60 * 60 * 24 * 180,
@@ -345,7 +345,7 @@ export async function GET(request: NextRequest) {
       });
     }
     if (profile.pictureUrl) {
-      response.cookies.set("maxvalue_line_picture_url", encodeURIComponent(profile.pictureUrl), {
+      response.cookies.set("maxvalue_line_picture_url", profile.pictureUrl, {
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
         maxAge: 60 * 60 * 24 * 180,
