@@ -6,11 +6,17 @@ import { ADMIN_SESSION_COOKIE, getAdminSessionLineUserId } from "@/lib/admin";
 export const dynamic = "force-dynamic";
 
 function decodeCookie(value = "") {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
+  let decoded = value;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const next = decodeURIComponent(decoded);
+      if (next === decoded) break;
+      decoded = next;
+    } catch {
+      break;
+    }
   }
+  return decoded;
 }
 
 export async function GET(request: NextRequest) {
