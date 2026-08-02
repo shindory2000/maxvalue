@@ -574,6 +574,24 @@ function AdminModeSwitcher() {
 }
 
 function BottomNav({ role, screen, go, badges = {} }: { role: Role; screen: Screen; go: (s: Screen) => void; badges?: Partial<Record<Screen, number>> }) {
+  const [seekerBadges, setSeekerBadges] = useState<Partial<Record<Screen, number>>>({});
+  useEffect(() => {
+    if (role !== "seeker") return;
+    let active = true;
+    const lineUserId = getActiveLineUserId();
+    Promise.all([
+      fetchOffers(lineUserId).catch(() => []),
+      fetchGachaState(lineUserId).catch(() => ({ registration_invite: 0, interview: 0, results: [], rank: "A" })),
+      fetch(`/api/seeker/verification?lineUserId=${encodeURIComponent(lineUserId)}`, { cache: "no-store" }).then(response => response.ok ? response.json() : { status: "not_submitted" }).catch(() => ({ status: "not_submitted" })),
+    ]).then(([offers, gacha, verification]) => {
+      if (!active) return;
+      const offerCount = safeArray(offers).filter(offer => offer.status === "new").length;
+      const ticketCount = safeNumber(gacha.registration_invite) + safeNumber(gacha.interview);
+      const profileCount = verification.status === "not_submitted" ? 1 : 0;
+      setSeekerBadges({ offers: offerCount, gacha: ticketCount, profile: profileCount });
+    });
+    return () => { active = false; };
+  }, [role, screen]);
   const seeker = [
     ["offers", "オファー", Mail], ["gacha", "ガチャ", Gift], ["profile", "マイページ", CircleUserRound]
   ] as const;
@@ -584,11 +602,12 @@ function BottomNav({ role, screen, go, badges = {} }: { role: Role; screen: Scre
     ["adminUsers", "ユーザー管理", Users], ["adminClubs", "お店管理", Store], ["sales", "営業", BarChart3]
   ] as const;
   const items = role === "seeker" ? seeker : role === "club" ? club : admin;
+  const visibleBadges = role === "seeker" ? { ...seekerBadges, ...badges } : badges;
   return (
     <nav className="bottom-nav">
       {items.map(([target, label, Icon]) => (
         <button key={target} className={screen === target ? "active" : ""} onClick={() => go(target as Screen)}>
-          <Icon size={22} />{Boolean(badges[target as Screen]) && <b className="nav-badge">{badges[target as Screen]}</b>}<span>{label}</span>
+          <Icon size={22} />{Boolean(visibleBadges[target as Screen]) && <b className="nav-badge">{visibleBadges[target as Screen]}</b>}<span>{label}</span>
         </button>
       ))}
     </nav>
@@ -1218,7 +1237,7 @@ function Offers({ go }: { go: (s: Screen) => void }) {
   const visibleOffers = offers.filter(offer => offerFilter === "all" || offer.status === offerFilter);
   return (
     <main className="app-shell">
-      <AppHeader title="オファー" action={<button className="icon-button"><Bell size={20} /></button>} />
+      <AppHeader title="オファー" action={<span />} />
       <section className="page-content">
         <div className="dashboard-hello"><div><span>MAXVALUE</span><h1>あなたへのオファー</h1></div></div>
         {offerMessage && <div className="inline-notice">{offerMessage}</div>}
@@ -1260,6 +1279,8 @@ function Gacha({ go }: { go: (s: Screen) => void }) {
   const [oddsOpen, setOddsOpen] = useState<{ title: string; items: GachaItemRecord[] } | null>(null);
   const [requestingPrize, setRequestingPrize] = useState(false);
   const [rank, setRank] = useState("A");
+  const [inviteCode, setInviteCode] = useState("");
+  const [inviteCopied, setInviteCopied] = useState<"line" | "ig" | "">("");
   useEffect(() => {
     const lineUserId = getActiveLineUserId();
     bootstrapTemporaryUser(lineUserId)
@@ -1270,6 +1291,7 @@ function Gacha({ go }: { go: (s: Screen) => void }) {
       }))
       .catch(() => undefined);
     fetchGachaState(lineUserId).then(state => setRank(state.rank || "A")).catch(() => undefined);
+    fetchSeekerProfile(lineUserId).then(profile => setInviteCode(profile?.invite_code || "")).catch(() => undefined);
     fetchGachaItems("registration_invite").then(items => setRegistrationItems(safeArray(items))).catch(() => setRegistrationItems([]));
     fetchGachaItems("interview").then(items => setInterviewItems(safeArray(items))).catch(() => setInterviewItems([]));
   }, []);
@@ -1331,6 +1353,9 @@ function Gacha({ go }: { go: (s: Screen) => void }) {
       setRequestingPrize(false);
     }
   };
+  const inviteBaseUrl = `https://maxvalue-seven.vercel.app/?screen=signin&ref=${encodeURIComponent(inviteCode)}`;
+  const lineInviteUrl = `${inviteBaseUrl}&src=line`;
+  const instagramInviteUrl = `${inviteBaseUrl}&src=ig`;
   return (
     <main className="app-shell gacha-page premium-gacha">
       <AppHeader title="ガチャ" action={<div className="gacha-wallet-mini ticket-split"><span title="ガチャチケット"><i className="ticket-icon silver"><Ticket size={17}/></i>{tickets.registration_invite}</span><span title="ゴールドチケット"><i className="ticket-icon gold"><Ticket size={17}/></i>{tickets.interview}</span></div>} />
@@ -1361,7 +1386,7 @@ function Gacha({ go }: { go: (s: Screen) => void }) {
         }} />;
       })}</div><b>抽選中です。</b></div>}
       {result && <div className="modal-backdrop prize-backdrop"><div className="result-modal prize-result"><button onClick={() => setResult(null)}><X /></button><span>CONGRATULATIONS</span><h2>{result.name}</h2>{result.image_url ? <img className="prize-result-image" src={result.image_url} alt={result.name} /> : <PrizeArtwork rarity={result.rarity} />}<p>{result.description}</p><div className="result-actions"><Button kind="secondary" onClick={() => setResult(null)}>ガチャ画面に戻る</Button><Button disabled={requestingPrize} onClick={() => requestPrize(result)}>{requestingPrize ? "申請中..." : "すぐ利用申請"}</Button></div></div></div>}
-      {inviteOpen && <div className="modal-backdrop"><div className="share-modal"><button className="modal-x" onClick={() => setInviteOpen(false)}><X /></button><span className="eyebrow">INVITE</span><h2>招待URL</h2><p>友達が登録するとガチャチケットが付与されます。</p><div className="copy-url">https://maxvalue-seven.vercel.app/?screen=signin&amp;ref={getActiveLineUserId().slice(-6)}</div><Button onClick={() => copyText(`https://maxvalue-seven.vercel.app/?screen=signin&ref=${getActiveLineUserId().slice(-6)}`)}>コピーする</Button></div></div>}
+      {inviteOpen && <div className="modal-backdrop"><div className="share-modal"><button className="modal-x" onClick={() => setInviteOpen(false)}><X /></button><span className="eyebrow">INVITE</span><h2>友達を招待</h2><p>送る場所に合わせてリンクを選んでください。Instagram等のアプリ内ブラウザーでは、外部ブラウザーで開く案内を表示します。</p><div className="invite-channel-grid"><button disabled={!inviteCode} onClick={() => { copyText(lineInviteUrl); setInviteCopied("line"); }}><MessageCircle/><b>LINEで送る</b><small>{inviteCopied === "line" ? "コピーしました" : "通常の招待リンク"}</small></button><button disabled={!inviteCode} onClick={() => { copyText(instagramInviteUrl); setInviteCopied("ig"); }}><Send/><b>Instagram等で送る</b><small>{inviteCopied === "ig" ? "コピーしました" : "外部ブラウザー案内付き"}</small></button></div></div></div>}
       {oddsOpen && <div className="modal-backdrop"><div className="odds-modal"><button className="modal-x" onClick={() => setOddsOpen(null)}><X /></button><span className="eyebrow">PROBABILITY</span><h2>{oddsOpen.title}</h2><p>現在のランク：{rank}（ランク補正後）</p><div className="odds-list">{oddsOpen.items.map(item => <div key={item.id}><span>{item.rarity || "PRIZE"}</span><b>{item.name}</b><small>{formatProbability(item, oddsOpen.items)}</small></div>)}</div><Button kind="secondary" onClick={() => setOddsOpen(null)}>閉じる</Button></div></div>}
       <BottomNav role="seeker" screen="gacha" go={go} />
     </main>
@@ -1521,7 +1546,7 @@ function FaceVerificationCard() {
 }
 
 function Profile({ go }: { go: (s: Screen) => void }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"line" | "ig" | "">("");
   const [prizeOpen, setPrizeOpen] = useState<GachaItemRecord | null>(null);
   const [allPrizesOpen, setAllPrizesOpen] = useState(false);
   const [prizes, setPrizes] = useState<GachaItemRecord[]>([]);
@@ -1563,7 +1588,9 @@ function Profile({ go }: { go: (s: Screen) => void }) {
     }
   };
   const photos = [profile?.photo_1_url || linePictureUrl, profile?.photo_2_url, profile?.full_body_photo_url];
-  const inviteUrl = `https://maxvalue-seven.vercel.app/?screen=signin&ref=${encodeURIComponent(profile?.invite_code || "")}`;
+  const inviteBaseUrl = `https://maxvalue-seven.vercel.app/?screen=signin&ref=${encodeURIComponent(profile?.invite_code || "")}`;
+  const lineInviteUrl = `${inviteBaseUrl}&src=line`;
+  const instagramInviteUrl = `${inviteBaseUrl}&src=ig`;
   const blockedClubs = safeArray(profile?.blocked_clubs);
   const profileRows = profile ? [
     ["年齢", `${profile.age}歳`],
@@ -1588,7 +1615,7 @@ function Profile({ go }: { go: (s: Screen) => void }) {
         <div className="profile-stats"><div><b>0</b><span>紹介した人数</span></div><div><b>0</b><span>採用された人数</span></div><div><b>{displayPrizes.length}</b><span>獲得した景品</span></div></div>
       </section>
       <section className="page-content profile-content">
-        <div className="invite-card compact-invite"><div><span><Ticket size={16} /> あなたの招待リンク</span><b>{profile?.invite_code ? inviteUrl : "登録完了後に発行"}</b></div><button onClick={() => { if (profile?.invite_code) copyText(inviteUrl); setCopied(true); }}>{copied ? <Check /> : <Copy />}</button><p>友達が登録すると、あなたにもガチャチケットが1枚届きます。</p></div>
+        <div className="invite-card compact-invite seeker-invite-card"><div><span><Ticket size={16} /> 友達を招待</span><b>送る場所に合ったリンクを選んでください</b></div><div className="seeker-invite-actions"><button disabled={!profile?.invite_code} onClick={() => { copyText(lineInviteUrl); setCopied("line"); }}><MessageCircle/><span>LINEで送る</span><small>{copied === "line" ? "コピーしました" : "通常リンク"}</small></button><button disabled={!profile?.invite_code} onClick={() => { copyText(instagramInviteUrl); setCopied("ig"); }}><Send/><span>Instagram等</span><small>{copied === "ig" ? "コピーしました" : "外部ブラウザー案内付き"}</small></button></div><p>Instagram等で送るリンクは、アプリ内ブラウザーで外部ブラウザーへの切り替え方法を案内します。</p></div>
         {profile && <FaceVerificationCard />}
         <div className="section-title"><div><span>COLLECTION</span><h2>ガチャ獲得物</h2></div><button onClick={() => setAllPrizesOpen(true)}>すべて見る</button></div>
         <div className="reward-grid">
