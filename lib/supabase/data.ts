@@ -29,11 +29,20 @@ function readCookie(name: string) {
     .map(value => value.trim())
     .find(value => value.startsWith(`${name}=`));
   if (!entry) return "";
-  try {
-    return decodeURIComponent(entry.slice(name.length + 1));
-  } catch {
-    return entry.slice(name.length + 1);
+  let value = entry.slice(name.length + 1);
+  // Older LINE callbacks encoded display names before Next.js encoded the
+  // cookie again. Decode a few times so existing users are repaired without
+  // requiring another login.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const decoded = decodeURIComponent(value);
+      if (decoded === value) break;
+      value = decoded;
+    } catch {
+      break;
+    }
   }
+  return value;
 }
 
 export function ensureTemporaryLineUserId() {
