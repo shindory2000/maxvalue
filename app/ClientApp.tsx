@@ -632,14 +632,14 @@ function Landing({ go }: { go: (s: Screen) => void }) {
   } as const;
 
   return (
-    <main className="brand-site refined-lp">
-      {loading && <motion.div className="brand-loader playful-loader" initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ delay: .55, duration: .3 }}><Logo light /><span>YOUR NEXT STAGE IS CALLING</span></motion.div>}
+    <main className="brand-site refined-lp mv-night-lp">
+      {loading && <motion.div className="brand-loader playful-loader" initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ delay: .55, duration: .3 }}><Logo light /><span>TOKYO NIGHT CAREER</span></motion.div>}
       <nav className="refined-nav">
         <a href="#top" className="refined-logo"><Logo /></a>
         <div className="refined-nav-links">
-          <a href="#features">選ばれる理由</a>
+          <a href="#features">選べる理由</a>
           <a href="#how">ご利用の流れ</a>
-          <a href="#stories">ストーリー</a>
+          <a href="#stories">利用イメージ</a>
         </div>
         <LineLoginButton screen="setup" className="refined-nav-cta">LINEで無料登録 <ArrowRight size={16}/></LineLoginButton>
         <button className="brand-menu-button refined-menu-button" onClick={() => setMenuOpen(true)} aria-label="メニュー"><Menu size={24} /></button>
@@ -647,12 +647,12 @@ function Landing({ go }: { go: (s: Screen) => void }) {
 
       <section id="top" className="refined-hero">
         <div className="refined-hero-copy">
-          <motion.span initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>NIGHT CAREER PLATFORM</motion.span>
+          <motion.span initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>TOKYO NIGHT CAREER</motion.span>
           <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .1, duration: .65 }}>
-            条件を見て、<br/><em>あなたが選ぶ。</em>
+            あなたの価値は、<br/><em>あなたが選ぶ。</em>
           </motion.h1>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .3 }}>
-            高級店から届くオファーを、LINEで確認。<br/>時給・保証期間を見て、会いたいお店だけ選べます。
+            条件を先に。決めるのは、あなた。<br/>届いたオファーを比べて、会いたいお店だけ選べます。
           </motion.p>
           <motion.div className="refined-hero-actions" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .4 }}>
             <LineLoginButton screen="setup" className="refined-primary-cta">LINEで無料登録 <ArrowRight size={18}/></LineLoginButton>
@@ -672,14 +672,14 @@ function Landing({ go }: { go: (s: Screen) => void }) {
         </div>
       </section>
 
-      <div className="refined-proof"><span>登録・利用料</span><b>0円</b><i/><span>登録名</span><b>ニックネーム</b><i/><span>オファー確認</span><b>LINEで完結</b></div>
+      <div className="refined-proof"><span>登録料</span><b>0円</b><i/><span>プロフィール</span><b>ニックネーム</b><i/><span>オファー</span><b>LINEで確認</b></div>
 
       <section id="concept" className="refined-concept">
-        <FadeIn className="refined-section-heading"><span>OUR CONCEPT</span><h2>探す転職から、<br/>届くオファーを選ぶ転職へ。</h2><p>プロフィールを一度登録すれば、お店から条件付きのオファーが届きます。知らないお店を探し回ったり、条件が分からないまま面接へ行く必要はありません。</p></FadeIn>
+        <FadeIn className="refined-section-heading"><span>THE NEW STANDARD</span><h2>探さない。<br/>比べて、選ぶ。</h2><p>プロフィールを登録すると、お店から条件付きのオファーが届きます。時給も保証期間も、面接へ進む前に確認できます。</p></FadeIn>
       </section>
 
       <section id="features" className="refined-features">
-        <div className="refined-section-heading light"><span>WHY MAXVALUE</span><h2>自分の価値を、<br/>自分で選べる。</h2></div>
+        <div className="refined-section-heading light"><span>WHY MAXVALUE</span><h2>見えない条件を、<br/>見える選択へ。</h2></div>
         <div className="refined-feature-grid">
           <FadeIn className="refined-feature-card"><i>01</i><Mail/><h3>条件が先に分かる</h3><p>時給・保証期間・お店からのコメントを見てから、返答できます。</p></FadeIn>
           <FadeIn className="refined-feature-card"><i>02</i><ShieldCheck/><h3>公開先を選べる</h3><p>現在勤務店や見られたくないお店を設定。プロフィールの公開範囲を管理できます。</p></FadeIn>
@@ -688,7 +688,7 @@ function Landing({ go }: { go: (s: Screen) => void }) {
       </section>
 
       <section id="stories" className="refined-stories">
-        <div className="refined-section-heading"><span>REAL STORIES</span><h2>次のステージを、<br/>自分で決めた人たち。</h2></div>
+        <div className="refined-section-heading"><span>NEXT STAGE</span><h2>夜が変わる。<br/>選び方が変わる。</h2></div>
         <div className="refined-story-grid">{stories.map((story, index) => <motion.figure key={story.image} whileHover={{ y: -6 }}><img src={story.image} alt={story.alt}/><figcaption><span>0{index + 1}</span><div><b>{story.copy}</b><small>{story.label}</small></div><ArrowRight/></figcaption></motion.figure>)}</div>
       </section>
 
@@ -703,7 +703,7 @@ function Landing({ go }: { go: (s: Screen) => void }) {
 
       <section className="refined-final">
         <span>YOUR NEXT STAGE IS CALLING</span>
-        <h2>まだ知らない条件が、<br/>あなたを待っている。</h2>
+        <h2>いい条件は、<br/>探さなくても届く。</h2>
         <p>登録は無料。本名を入力せず、LINEから始められます。</p>
         <LineLoginButton screen="setup" className="refined-final-cta">LINEで無料登録 <ArrowRight size={18}/></LineLoginButton>
       </section>
